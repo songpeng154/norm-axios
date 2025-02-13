@@ -1,0 +1,51 @@
+{
+  "name": "@surge/monorepo",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.12.0",
+    "pnpm": ">=8.7.0"
+  },
+  "scripts": {
+    "build": "vue-tsc -b && vite build",
+    "type-check": "vue-tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint-staged": "lint-staged"
+  },
+  "dependencies": {
+    "@surge/components": "workspace:*",
+    "@surge/entrance": "workspace:*",
+    "@surge/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^3.12.0",
+    "@types/node": "^22.10.1",
+    "@unocss/eslint-plugin": "^0.65.1",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "eslint": "^9.17.0",
+    "esno": "*",
+    "lint-staged": "^15.2.10",
+    "sass": "^1.82.0",
+    "simple-git-hooks": "^2.11.1",
+    "typescript": "~5.6.3",
+    "unocss": "^0.65.1",
+    "vite": "^6.0.0",
+    "vitest": "^2.1.5",
+    "vue": "^3.5.13",
+    "vue-tsc": "^2.1.10"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  },
+  "workspaces": [
+    "packages/*",
+    "script/*",
+    ".docs"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@surge/utils",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "license": "MIT",
+  "keywords": [],
+  "main": "index.ts"
+}
