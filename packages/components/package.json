@@ -1,8 +1,0 @@
-{
-  "name": "@surge/components",
-  "version": "1.0.0",
-  "description": "",
-  "author": "songpeng",
-  "license": "MIT",
-  "main": "index.ts"
-}
