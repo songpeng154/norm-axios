@@ -1,7 +1,7 @@
 <p align="center">
   <img width="300px" src="https://user-images.githubusercontent.com/10731096/95823103-9ce15780-0d5f-11eb-8010-1bd1b5910d4f.png">
 </p>
-<p align="center">
+<p align="center" style="font-size: 3em">
 <b>Coven Fetch</b>
 </p>
 <p align="center">
@@ -35,6 +35,8 @@ Coven Fetch 是一个基于 Axios 的约定式请求库
 
 #### 例如
 ```typescript
+import axios from 'axios'
+
 // 服务 A 返回的数据格式如下
 interface ResultA<TData> {
   code: number,
@@ -49,7 +51,31 @@ interface ResultB<TData> {
   result: TData
 }
 
+// 模拟响应数据类型 A
+interface ApiA {
+  name: string
+}
 
+// 模拟响应数据类型 B
+interface ApiB {
+  title: string
+}
+
+// axios 实例 1
+const instance_1 = axios.create({
+  baseURL: 'http://api-1.com',
+})
+
+// axios 实例 2
+const instance_2 = axios.create({
+  baseURL: 'http://api-2.com',
+})
+
+// 请求服务 A
+const apiA = async () => {
+  const res = await instance_1.get<ResultA<ApiA>>('/api')
+  return res.data.data
+}
 ```
 
 这会使得每个请求的数据处理都需要不同的解析逻辑，增加了代码的复杂性。
