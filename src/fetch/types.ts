@@ -22,7 +22,7 @@ export type ResponseContent<
 ]
 
 // axios拦截器
-export interface AxiosInterceptor<TDataStructure = any> {
+export interface Interceptor<TDataStructure = any> {
   // 请求之前拦截器
   onBeforeRequest?: (config: AxiosRequestConfig) => void | Promise<void>
 
@@ -48,7 +48,7 @@ export interface AxiosInterceptor<TDataStructure = any> {
 // axios配置
 export interface AxiosConfig<TDataStructure = any> extends CreateAxiosDefaults {
   // 拦截器
-  interceptor?: AxiosInterceptor<TDataStructure>
+  interceptor?: Interceptor<TDataStructure>
 }
 
 // 元数据
