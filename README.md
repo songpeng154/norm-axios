@@ -20,19 +20,44 @@
 Coven Fetch 是一个基于 Axios 的约定式请求库
 </p>
 
+
+## 为什么写 Coven Fetch
+在业务项目中我们可能还遇到多个后台服务，这些后台服务的数据结构可能不一致，这就导致了一些问题
+
 [//]: # ()
-[//]: # (## 介绍)
+[//]: # (1. 数据结构混乱，不统一，数据处理的复杂性增加。)
 
-[//]: # (Coven Fetch 是一个基于 Axios 的约定式请求库，为什么要写这个库？)
+[//]: # (2. 重复的请求逻辑，重复的数据处理逻辑。)
 
-[//]: # ()
-[//]: # (* 多个后端服务数据结构不一致的问题)
+[//]: # (3. TypeScript 类型不好处理。)
 
+前端开发人员需要编写额外的逻辑来处理这些差异。
+
+#### 例如
+```typescript
+// 服务 A 返回的数据格式如下
+interface ResultA<TData> {
+  code: number,
+  msg: string
+  data: TData
+}
+
+// 服务 B 返回的数据格式如下
+interface ResultB<TData> {
+  status: number,
+  message: string
+  result: TData
+}
+
+
+```
+
+这会使得每个请求的数据处理都需要不同的解析逻辑，增加了代码的复杂性。
 
 ## 特性
 * 统一多后端服务的数据结构
-* 强大的 useFetch 和 usePagination
-* 完全使用 Typescript 编写，具有强大的类型提示
+* 强大的 useFetch 和 usePagination 钩子函数
+* 支持 Typescript，具有强大的类型提示
 
 
 ## 文档
@@ -49,12 +74,14 @@ or
 pnpm add axios coven-fetch
 ```
 
-### 创建服务实例
+## 定义后台
+
+## 创建服务实例
 ```typescript
 import { NormFetch } from 'coven-fetch'
 
- const server = new NormFetch({
+const server = new NormFetch({
   baseURL: 'https://api.example.com',
   timeout: 10000,
- })
+})
 ```
