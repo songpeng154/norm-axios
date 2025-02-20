@@ -7,6 +7,7 @@ import { CJS_BUNDLE_PATH, ENTRANCE_PATH, ESM_BUNDLE_PATH, SRC_PATH } from './uti
 // 模块打包
 export const moduleBuild = async (minify: boolean) => {
   await build({
+    logLevel: 'silent',
     plugins: [
       dtsPlugin({
         outDir: [ESM_BUNDLE_PATH, CJS_BUNDLE_PATH],

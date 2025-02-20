@@ -4,7 +4,7 @@ import { BUNDLE_PATH } from './utils/paths.ts'
 
 const packageJson = {
   name: 'coven-fetch',
-  version: '0.2.0',
+  version: '0.2.1',
   description: 'My Node.js Application',
   main: 'lib/index.js',
   module: 'es/index.js',

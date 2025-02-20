@@ -65,7 +65,7 @@ export type PaginationAndFetchOptions<
   // 数据
   TData extends PaginationResponse = PaginationResponse,
   // 方法参数
-  TParams extends unknown[] = unknown[],
+  TParams extends any[] = any[],
   // 格式化数据
   TFormatData extends PaginationResponse = TData,
   // 原始数据
@@ -78,7 +78,7 @@ export interface PaginationResult<
   // 数据
   TData extends PaginationResponse = PaginationResponse,
   // 方法参数
-  TParams extends unknown[] = unknown[],
+  TParams extends any[] = any[],
   // 格式化数据
   TFormatData extends PaginationResponse = TData,
   // 原始数据

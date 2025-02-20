@@ -4,6 +4,7 @@ export default config(
   {
     lessOpinionated: true,
     unocss: true,
+    vue: true,
   },
   {
     rules: {

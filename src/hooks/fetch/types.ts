@@ -266,9 +266,9 @@ export interface FetchState<
 
 export interface FetchMethod<
   // 数据
-  TData,
+  TData = any,
   // 方法参数
-  TParams extends unknown[],
+  TParams extends any[] = any[],
   // 格式化数据
   TFormatData = TData,
 > {
