@@ -27,7 +27,6 @@ Coven Fetch 是一个基于 Axios 的约定式请求库
 * 简化了数据获取流程，自动处理请求状态，减少了冗余代码。
 * 简化了分页处理，自动管理分页状态，减少了手动编写分页逻辑的麻烦。
 
-
 ## 特性
 
 * 统一多后端服务的数据结构
@@ -81,7 +80,10 @@ interface ResultB<TData> {
 
 `NormFetch` 的`构造函数`接收一个配置对象，配置对象的属性和 `Axios` 的配置对象一致。
 
-`NormFetch` 将 `Axios` 的拦截器的方法抽取到了`interceptor`中，强制了响应成功、响应失败的返回类型，统一要求返回 `ResponseContent` 类型,不要在拦截器中返回异步异常： `Promise.reject(responseContent)`，因为下层请求接受不到该异常，请把异常设置到`responseContent[1]`中。
+`NormFetch` 将 `Axios` 的拦截器的方法抽取到了`interceptor`中，强制了响应成功、响应失败的返回类型，统一要求返回 `ResponseContent` 类型
+
+> 不要在拦截器中返回异步异常这类操作： `Promise.reject(responseContent)`，因为下层请求接受不到该异常，请把异常设置到`responseContent[1]`中。
+
 ```typescript
 import { NormFetch,ResponseContent } from 'coven-fetch'
 
