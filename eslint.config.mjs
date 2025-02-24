@@ -3,8 +3,6 @@ import config from '@antfu/eslint-config'
 export default config(
   {
     lessOpinionated: true,
-    unocss: true,
-    vue: true,
   },
   {
     rules: {
