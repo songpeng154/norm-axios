@@ -3,25 +3,25 @@
 [//]: # (  <img width="300px" src="https://user-images.githubusercontent.com/10731096/95823103-9ce15780-0d5f-11eb-8010-1bd1b5910d4f.png">)
 </p>
 <p align="center" style="font-size: 3em">
-<b>Coven Fetch</b>
+<b>Norm Fetch</b>
 </p>
 <p align="center">
-  <a href="https://www.npmjs.org/package/coven-fetch">
-    <img src="https://img.shields.io/npm/v/coven-fetch.svg" />
+  <a href="https://www.npmjs.org/package/norm-fetch">
+    <img src="https://img.shields.io/npm/v/norm-fetch.svg" />
   </a>
-  <a href="https://github.com/songpeng154/coven-fetch">
+  <a href="https://github.com/songpeng154/norm-fetch">
     <img src="https://img.shields.io/badge/node-%20%3E%3D%2018-47c219" />
   </a>
-  <a href="https://npmcharts.com/compare/coven-fetch?minimal=true">
-    <img src="https://img.shields.io/npm/dm/coven-fetch.svg" />
+  <a href="https://npmcharts.com/compare/norm-fetch?minimal=true">
+    <img src="https://img.shields.io/npm/dm/norm-fetch.svg" />
   </a>
   <br>
 </p>
 <p align="center">
-Coven Fetch 是一个基于 Axios 的约定式请求库
+Norm Fetch 是一个基于 Axios 的约定式请求库
 </p>
 
-## Coven Fetch 解决了什么问题
+## Norm Fetch 解决了什么问题
 
 * 解决了多个后台服务，后台服务的数据结构可能不一致的问题
 * 简化了数据获取流程，自动处理请求状态，减少了冗余代码。
@@ -43,7 +43,7 @@ Coven Fetch 是一个基于 Axios 的约定式请求库
 
 ## 文档
 
-[详细文档](https://songpeng154.github.io/coven-fetch/)
+[详细文档](https://songpeng154.github.io/norm-fetch/)
 
 [//]: # (## 快速开始)
 
@@ -52,7 +52,7 @@ Coven Fetch 是一个基于 Axios 的约定式请求库
 
 [//]: # (# 使用 npm 安装 )
 
-[//]: # (npm install axios coven-fetch)
+[//]: # (npm install axios norm-fetch)
 
 [//]: # ()
 [//]: # (or)
@@ -60,7 +60,7 @@ Coven Fetch 是一个基于 Axios 的约定式请求库
 [//]: # ()
 [//]: # (# 使用 pnpm 安装 )
 
-[//]: # (pnpm add axios coven-fetch)
+[//]: # (pnpm add axios norm-fetch)
 
 [//]: # (```)
 
@@ -104,7 +104,7 @@ Coven Fetch 是一个基于 Axios 的约定式请求库
 [//]: # ()
 [//]: # (```typescript)
 
-[//]: # (import { NormFetch, ResponseContent } from 'coven-fetch')
+[//]: # (import { NormFetch, ResponseContent } from 'norm-fetch')
 
 [//]: # ()
 [//]: # (const server = new NormFetch<Result>&#40;{)
@@ -232,7 +232,7 @@ Coven Fetch 是一个基于 Axios 的约定式请求库
 
 [//]: # (<script lang="ts" setup>)
 
-[//]: # (  import { useFetch } from 'coven-fetch')
+[//]: # (  import { useFetch } from 'norm-fetch')
 
 [//]: # (  )
 [//]: # (  const { data, loading, error } = useFetch&#40;getUserinfo&#41;;)
@@ -247,7 +247,7 @@ Coven Fetch 是一个基于 Axios 的约定式请求库
 [//]: # ()
 [//]: # (```typescript)
 
-[//]: # (import { usePagination } from 'coven-fetch')
+[//]: # (import { usePagination } from 'norm-fetch')
 
 [//]: # ()
 [//]: # (const { data, loading, error, refetch } = usePagination&#40;pagination=>getUserList&#40;{}&#41;&#41;)

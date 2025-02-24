@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { BUNDLE_PATH } from './utils/paths.ts'
 
 const packageJson = {
-  name: 'coven-fetch',
+  name: 'norm-fetch',
   version: '0.2.1',
   description: 'My Node.js Application',
   main: 'lib/index.js',
@@ -21,13 +21,13 @@ const packageJson = {
   keywords: ['axios', 'demo'],
   author: 'SongPeng <419626398@qq.com>',
   license: 'MIT',
-  homepage: 'https://github.com/songpeng154/coven-fetch.git',
+  homepage: 'https://github.com/songpeng154/norm-fetch.git',
   repository: {
     type: 'git',
-    url: 'https://github.com/songpeng154/coven-fetch.git',
+    url: 'https://github.com/songpeng154/norm-fetch.git',
   },
   bugs: {
-    url: 'https://github.com/songpeng154/coven-fetch.gitt/issues',
+    url: 'https://github.com/songpeng154/norm-fetch.gitt/issues',
   },
   dependencies: {
     '@vueuse/core': '^12.5.x',
