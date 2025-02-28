@@ -1,16 +1,15 @@
-import type { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
-import type { AxiosConfig, ResponseContent } from './types.ts'
-import axios from 'axios'
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
+import { NormFetchConfig, ResponseContent } from './types.ts'
 import { omit } from 'es-toolkit'
 
 // 约定式 Axios
-export default class NormFetch<TDataStructure extends Recordable = Recordable> {
+export default class NormFetch<TResponse extends Recordable = Recordable> {
   public axiosInstance: AxiosInstance
 
-  public axiosConfig: AxiosConfig<TDataStructure>
+  public axiosConfig: NormFetchConfig<TResponse>
 
-  constructor(config: AxiosConfig<TDataStructure>) {
-    this.axiosInstance = axios.create(omit(config, ['interceptor']))
+  constructor(config: NormFetchConfig<TResponse>) {
+    this.axiosInstance = axios.create(omit(config, [ 'interceptor' ]))
     this.axiosConfig = config
 
     // 请求拦截器
@@ -29,34 +28,32 @@ export default class NormFetch<TDataStructure extends Recordable = Recordable> {
     )
   }
 
-  public request<TData = any, TParams = any>(config: AxiosRequestConfig<TParams>): Promise<ResponseContent<TData, TParams, TDataStructure>> {
-    return this.axiosInstance.request<ResponseContent<TData, TParams>>(config) as unknown as Promise<ResponseContent<TData, TParams, TDataStructure>>
+  public request<TData = any, TParams extends Recordable = Recordable>(config: AxiosRequestConfig<TParams>): Promise<ResponseContent<TData, TResponse>> {
+    return this.axiosInstance.request<ResponseContent<TData, TParams>>(config) as unknown as Promise<ResponseContent<TData, TResponse>>
   }
 
-  // Get 请求
-  public get<TData = any, TParams = any>(url: string, params?: TParams, config?: AxiosRequestConfig<TParams>) {
+  public get<TData = any, TParams extends Recordable = Recordable>(url: string, params?: TParams, config?: AxiosRequestConfig<TParams>) {
+    this.request({
+      url: '/userinfo',
+      method: 'get',
+      params,
+    })
     return this.request<TData, TParams>({ method: 'get', url, params, ...config })
   }
 
-  public post<TData = any, TParams = any>(url: string, data?: TParams, config?: AxiosRequestConfig<TParams>) {
+  public post<TData = any, TParams extends Recordable = Recordable>(url: string, data?: TParams, config?: AxiosRequestConfig<TParams>) {
     return this.request<TData, TParams>({ method: 'post', url, data, ...config })
   }
 
-  public put<TData = any, TParams = any>(url: string, data?: TParams, config?: AxiosRequestConfig<TParams>) {
+  public put<TData = any, TParams extends Recordable = Recordable>(url: string, data?: TParams, config?: AxiosRequestConfig<TParams>) {
     return this.request<TData, TParams>({ method: 'put', url, data, ...config })
   }
 
-  public delete<TData = any, TParams = any>(url: string, data?: TParams, config?: AxiosRequestConfig<TParams>) {
+  public delete<TData = any, TParams extends Recordable = Recordable>(url: string, data?: TParams, config?: AxiosRequestConfig<TParams>) {
     return this.request<TData, TParams>({ method: 'delete', url, data, ...config })
   }
 
-  /**
-   * 继承已有的 UnifyAxios 实例
-   * @param instance UnifyAxios 实例
-   * @param config UnifyAxios配置
-   * @return UnifyAxios 实例
-   */
-  static extend<Result extends Recordable = Recordable>(instance: NormFetch<Result>, config?: AxiosConfig<Result>) {
+  static extend<Result extends Recordable = Recordable>(instance: NormFetch<Result>, config?: NormFetchConfig<Result>): NormFetch<Result> {
     return new NormFetch(Object.assign(instance.axiosConfig, config))
   }
 }

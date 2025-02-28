@@ -13,16 +13,15 @@ export interface ResponseError {
 // 响应内容
 export type ResponseContent<
   TData = any,
-  TParams = any,
-  TDataStructure = any,
+  TResponse = any,
 > = [
   TData,
   ResponseError?,
-  AxiosResponse<TDataStructure, TParams>?,
+  AxiosResponse<TResponse>?,
 ]
 
-// axios拦截器
-export interface Interceptor<TDataStructure = any> {
+// 拦截器
+export interface NormFetchInterceptor<TResponse extends Recordable = Recordable> {
   // 请求之前拦截器
   onBeforeRequest?: (config: AxiosRequestConfig) => void | Promise<void>
 
@@ -33,7 +32,7 @@ export interface Interceptor<TDataStructure = any> {
    * 不要出现该类似的操作：return Promise.reject(responseContent),请直接 return responseContent
    * @param response
    */
-  onResponse?: (response: AxiosResponse<TDataStructure>) => ResponseContent<TDataStructure> | Promise<ResponseContent<TDataStructure>>
+  onResponse?: (response: AxiosResponse<TResponse>) => ResponseContent<TResponse> | Promise<ResponseContent<TResponse>>
 
   /**
    * 响应错误
@@ -45,17 +44,17 @@ export interface Interceptor<TDataStructure = any> {
   onResponseError?: (error: AxiosError) => ResponseContent | Promise<ResponseContent>
 }
 
-// axios配置
-export interface AxiosConfig<TDataStructure = any> extends CreateAxiosDefaults {
+// 配置
+export interface NormFetchConfig<TResponse extends Recordable = Recordable> extends CreateAxiosDefaults {
   // 拦截器
-  interceptor?: Interceptor<TDataStructure>
+  interceptor?: NormFetchInterceptor<TResponse>
 }
 
 // 元数据
 export interface Meta {
-  test: number
 }
 
 declare module 'axios' {
-  interface AxiosRequestConfig extends Partial<Meta> {}
+  interface AxiosRequestConfig extends Partial<Meta> {
+  }
 }

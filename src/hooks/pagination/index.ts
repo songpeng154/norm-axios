@@ -5,7 +5,7 @@ import { computed, inject, ref, watch } from 'vue'
 import { useFetch } from '../fetch'
 import { GLOBAL_PROVIDER_SYMBOL } from '../global'
 
-export const usePagination = <
+export function usePagination<
   // 数据
   TData extends PaginationResponse = PaginationResponse,
   // 方法参数
@@ -14,10 +14,10 @@ export const usePagination = <
   TFormatData extends PaginationResponse = TData,
   // 原始数据
   TRawData = any,
-> (
+>(
   service: PaginationServiceFn<TData, TRawData>,
   options: PaginationAndFetchOptions<TData, TParams, TFormatData, TRawData> = {},
-): PaginationResult<TData, TParams, TFormatData, TRawData> => {
+): PaginationResult<TData, TParams, TFormatData, TRawData> {
   const globalProvider = inject(GLOBAL_PROVIDER_SYMBOL)
 
   const config: PaginationAndFetchOptions<TData, TParams, TFormatData, TRawData> = Object.assign(options, globalProvider?.pagination)
@@ -41,7 +41,7 @@ export const usePagination = <
   const lastPage = ref(initialPage)
 
   // 列表数据
-  const list = ref <TFormatData['list']> ([] as TFormatData['list'])
+  const list = ref<TFormatData['list']>([] as TFormatData['list'])
 
   const fetchInstance = useFetch<TData, TParams, TFormatData, TRawData>(
     () => service({ page: page.value, pageSize: pageSize.value }),
@@ -56,7 +56,7 @@ export const usePagination = <
         onSuccess?.(data, params, response)
         if (!addedMode) return
         // 数据追加
-        list.value = (page.value <= lastPage.value ? data.list : [...list.value, ...data.list]) ?? []
+        list.value = (page.value <= lastPage.value ? data.list : [ ...list.value, ...data.list ]) ?? []
         lastPage.value = page.value
       },
     },

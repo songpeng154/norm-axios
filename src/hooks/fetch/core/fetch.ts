@@ -86,7 +86,7 @@ function useCoreFetch<
     })
 
     try {
-      const [result, err, res] = await service(...args)
+      const [ result, err, res ] = await service(...args)
 
       // 当连续请求的时候，最后一个服务请求完之后
       if (currentCount === count) {
@@ -124,11 +124,9 @@ function useCoreFetch<
       runPluginHooks('onSuccess', finalData, args, res!)
 
       return finalData
-    }
-    catch (e) {
+    } catch (e) {
       console.log(e)
-    }
-    finally {
+    } finally {
       onFinally?.(args)
       runPluginHooks('onFinally', args)
     }
@@ -145,9 +143,9 @@ function useCoreFetch<
 
   // 更改数据
   const mutate = (newData: TFormatData | ((oldData: TFormatData) => TFormatData)) => {
-    setState({
-      data: (isFunction(newData) ? newData(rawState) : newData) as TFormatData,
-    })
+    const data = (isFunction(newData) ? newData(rawState) : newData) as TFormatData
+    setState({ data })
+    runPluginHooks('onMutate', data)
   }
 
   return {

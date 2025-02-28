@@ -337,13 +337,13 @@ export interface FetchPluginHooks<
   TRawData = any,
 > {
   /**
-   * 请求之前钩子,如果返回 true 就表示停止后面代码的执行
+   * 请求之前触发
    * @return boolean ｜ void
    */
   onBefore?: (params: TParams, stopExec: () => void) => void
 
   /**
-   * 失败钩子
+   * 请求失败时触发
    */
   onError?: (
     error: ResponseError,
@@ -352,7 +352,7 @@ export interface FetchPluginHooks<
   ) => void
 
   /**
-   * 成功钩子
+   * 请求成功时触发
    */
   onSuccess?: (
     data: TFormatData,
@@ -371,12 +371,12 @@ export interface FetchPluginHooks<
   onFinally?: (params: TParams) => void
 
   /**
-   * 修改数据钩子
+   * 通过 mutate 修改数据时触发
    */
   onMutate?: (data: TFormatData) => void
 
   /**
-   * 取消请求钩子
+   * 通过 cancel 取消请求时触发
    */
   onCancel?: () => void
 }

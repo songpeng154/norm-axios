@@ -4,7 +4,7 @@ import { BUNDLE_PATH } from './utils/paths.ts'
 
 const packageJson = {
   name: 'norm-fetch',
-  version: '0.2.1',
+  version: '0.2.2',
   description: 'My Node.js Application',
   main: 'lib/index.js',
   module: 'es/index.js',
