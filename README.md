@@ -3,7 +3,7 @@
 [//]: # (  <img width="300px" src="https://user-images.githubusercontent.com/10731096/95823103-9ce15780-0d5f-11eb-8010-1bd1b5910d4f.png">)
 </p>
 <p align="center" style="font-size: 3em">
-<b>Norm Fetch</b>
+<b>Norm Axios</b>
 </p>
 <p align="center">
   <a href="https://www.npmjs.org/package/norm-fetch">
@@ -18,10 +18,10 @@
   <br>
 </p>
 <p align="center">
-Norm Fetch 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。
+Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。
 </p>
 
-## Norm Fetch 解决了什么问题
+## Norm Axios 解决了什么问题
 
 * 解决了多个后台服务，后台服务的数据结构可能不一致的问题。
 * 简化了数据获取流程，自动处理请求状态，减少了冗余代码。
