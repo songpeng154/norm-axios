@@ -3,9 +3,9 @@ import { resolve } from 'node:path'
 import { BUNDLE_PATH } from './utils/paths.ts'
 
 const packageJson = {
-  name: 'norm-fetch',
+  name: 'norm-axios',
   version: '0.2.2',
-  description: 'My Node.js Application',
+  description: 'Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。',
   main: 'lib/index.js',
   module: 'es/index.js',
   types: 'es/index.d.ts',
@@ -21,13 +21,13 @@ const packageJson = {
   keywords: ['axios', 'demo'],
   author: 'SongPeng <419626398@qq.com>',
   license: 'MIT',
-  homepage: 'https://github.com/songpeng154/norm-fetch.git',
+  homepage: 'https://github.com/songpeng154/norm-axios.git',
   repository: {
     type: 'git',
-    url: 'https://github.com/songpeng154/norm-fetch.git',
+    url: 'https://github.com/songpeng154/norm-axios.git',
   },
   bugs: {
-    url: 'https://github.com/songpeng154/norm-fetch.gitt/issues',
+    url: 'https://github.com/songpeng154/norm-axios.gitt/issues',
   },
   dependencies: {
     '@vueuse/core': '^12.5.x',

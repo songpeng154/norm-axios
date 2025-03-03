@@ -1,5 +1,5 @@
 {
-  "name": "norm-fetch",
+  "name": "norm-axios",
   "type": "module",
   "private": true,
   "license": "MIT",

@@ -6,14 +6,14 @@
 <b>Norm Axios</b>
 </p>
 <p align="center">
-  <a href="https://www.npmjs.org/package/norm-fetch">
-    <img src="https://img.shields.io/npm/v/norm-fetch.svg" />
+  <a href="https://www.npmjs.org/package/norm-axios">
+    <img src="https://img.shields.io/npm/v/norm-axios.svg" />
   </a>
-  <a href="https://github.com/songpeng154/norm-fetch">
+  <a href="https://github.com/songpeng154/norm-axios">
     <img src="https://img.shields.io/badge/node-%20%3E%3D%2018-47c219" />
   </a>
-  <a href="https://npmcharts.com/compare/norm-fetch?minimal=true">
-    <img src="https://img.shields.io/npm/dm/norm-fetch.svg" />
+  <a href="https://npmcharts.com/compare/norm-axios?minimal=true">
+    <img src="https://img.shields.io/npm/dm/norm-axios.svg" />
   </a>
   <br>
 </p>
@@ -43,7 +43,7 @@ Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的�
 
 ## 文档
 
-[详细文档](https://songpeng154.github.io/norm-fetch/)
+[详细文档](https://songpeng154.github.io/norm-axios/)
 
 ## 致谢
 * [Axios](https://github.com/axios/axios)
