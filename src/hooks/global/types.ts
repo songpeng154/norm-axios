@@ -1,7 +1,7 @@
-import type { FetchOptions, FetchPluginImplement } from '../fetch/types.ts'
 import type { PaginationOptions } from '../pagination/types.ts'
+import type { RequestOptions, RequestPluginImplement } from '../request/types.ts'
 
-export interface GlobalProvider<
+export interface GlobalConfigProvider<
   // 数据
   TData = any,
   // 方法参数
@@ -14,7 +14,7 @@ export interface GlobalProvider<
   /**
    * 通用配置
    */
-  common: FetchOptions<TData, TParams, TFormatData, TRawData>
+  common?: RequestOptions<TData, TParams, TFormatData, TRawData>
 
   /**
    * 分页配置
@@ -24,5 +24,5 @@ export interface GlobalProvider<
   /**
    * 插件
    */
-  plugins?: FetchPluginImplement<TData, TParams, TFormatData, TRawData>[]
+  plugins?: RequestPluginImplement<TData, TParams, TFormatData, TRawData>[]
 }

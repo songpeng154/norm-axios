@@ -2,8 +2,8 @@ import type { PaginationAndFetchOptions, PaginationResponse, PaginationResult, P
 import { useEventListener } from '@vueuse/core'
 import { omit } from 'es-toolkit'
 import { computed, inject, ref, watch } from 'vue'
-import { useFetch } from '../fetch'
-import { GLOBAL_PROVIDER_SYMBOL } from '../global'
+import { GLOBAL_CONFIG_PROVIDER_SYMBOL } from '../global'
+import { useRequest } from '../request'
 
 export function usePagination<
   // 数据
@@ -18,7 +18,7 @@ export function usePagination<
   service: PaginationServiceFn<TData, TRawData>,
   options: PaginationAndFetchOptions<TData, TParams, TFormatData, TRawData> = {},
 ): PaginationResult<TData, TParams, TFormatData, TRawData> {
-  const globalProvider = inject(GLOBAL_PROVIDER_SYMBOL)
+  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL)
 
   const config: PaginationAndFetchOptions<TData, TParams, TFormatData, TRawData> = Object.assign(options, globalProvider?.pagination)
 
@@ -43,7 +43,7 @@ export function usePagination<
   // 列表数据
   const list = ref<TFormatData['list']>([] as TFormatData['list'])
 
-  const fetchInstance = useFetch<TData, TParams, TFormatData, TRawData>(
+  const fetchInstance = useRequest<TData, TParams, TFormatData, TRawData>(
     () => service({ page: page.value, pageSize: pageSize.value }),
     {
       ...omit(config, [
@@ -56,7 +56,7 @@ export function usePagination<
         onSuccess?.(data, params, response)
         if (!addedMode) return
         // 数据追加
-        list.value = (page.value <= lastPage.value ? data.list : [ ...list.value, ...data.list ]) ?? []
+        list.value = (page.value <= lastPage.value ? data.list : [...list.value, ...data.list]) ?? []
         lastPage.value = page.value
       },
     },

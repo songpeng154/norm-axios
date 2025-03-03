@@ -1,6 +1,6 @@
-import NormFetch from './fetch/index'
+import NormAxios from './norm-axios/index'
 
-export * from './fetch/types'
 export * from './hooks/index'
+export * from './norm-axios/types'
 
-export { NormFetch }
+export { NormAxios }

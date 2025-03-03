@@ -1,9 +1,9 @@
 import type { AxiosResponse } from 'axios'
 import type { DebouncedFunction } from 'es-toolkit/dist/compat/function/debounce'
 import type { EffectScope, MaybeRef, Ref, WatchSource } from 'vue'
-import type { ResponseContent, ResponseError } from '../../fetch/types.ts'
+import type { ResponseContent, ResponseError } from '../../norm-axios/types.ts'
 
-export type FetchServiceFn<
+export type RequestServiceFn<
   // 数据
   TData = any,
   // 方法参数
@@ -13,7 +13,7 @@ export type FetchServiceFn<
 > = (...args: TParams) => Promise<ResponseContent<TData, TRawData>>
 
 // 请求配置项
-export interface FetchOptions<
+export interface RequestOptions<
   // 数据
   TData = any,
   // 方法参数
@@ -218,7 +218,7 @@ export interface FetchOptions<
   onFinally?: (params: TParams) => void
 }
 
-export interface FetchState<
+export interface RequestState<
   // 数据
   TData = any,
   // 方法参数
@@ -264,7 +264,7 @@ export interface FetchState<
   params: TParams
 }
 
-export interface FetchMethod<
+export interface RequestMethod<
   // 数据
   TData = any,
   // 方法参数
@@ -314,7 +314,7 @@ export interface FetchMethod<
   ) => void
 }
 
-export type FetchResult<
+export type RequestResult<
   // 数据
   TData = any,
   // 方法参数
@@ -323,10 +323,10 @@ export type FetchResult<
   TFormatData = TData,
   // 原始数据
   TRawData = any,
-> = WrapWithComputed<FetchState<TData, TParams, TFormatData, TRawData>> &
-  FetchMethod<TData, TParams, TFormatData>
+> = WrapWithComputed<RequestState<TData, TParams, TFormatData, TRawData>> &
+  RequestMethod<TData, TParams, TFormatData>
 
-export interface FetchPluginHooks<
+export interface RequestPluginHooks<
   // 数据
   TData = any,
   // 方法参数
@@ -381,7 +381,7 @@ export interface FetchPluginHooks<
   onCancel?: () => void
 }
 
-export interface FetchContext<
+export interface RequestContext<
   // 数据
   TData = any,
   // 方法参数
@@ -390,23 +390,23 @@ export interface FetchContext<
   TFormatData = TData,
   // 原始数据
   TRawData = any,
-> extends FetchResult<TData, TParams, TFormatData, TRawData> {
+> extends RequestResult<TData, TParams, TFormatData, TRawData> {
   // 当前作用域
   scope: EffectScope
 
   // 配置项
-  options: FetchOptions<TData, TParams, TFormatData, TRawData>
+  options: RequestOptions<TData, TParams, TFormatData, TRawData>
 
   // 原始 state
-  rawState: FetchState<TData, TParams, TFormatData, TRawData>
+  rawState: RequestState<TData, TParams, TFormatData, TRawData>
 
   // 设置状态
   setState: (
-    state: Partial<FetchState<TData, TParams, TFormatData, TRawData>>,
+    state: Partial<RequestState<TData, TParams, TFormatData, TRawData>>,
   ) => void
 }
 
-export interface FetchPluginImplement<
+export interface RequestPluginImplement<
   // 数据
   TData = any,
   // 方法参数
@@ -417,6 +417,6 @@ export interface FetchPluginImplement<
   TRawData = any,
 > {
   (
-    context: FetchContext<TData, TParams, TFormatData, TRawData>,
-  ): FetchPluginHooks<TData, TParams, TFormatData, TRawData> | void
+    context: RequestContext<TData, TParams, TFormatData, TRawData>,
+  ): RequestPluginHooks<TData, TParams, TFormatData, TRawData> | void
 }

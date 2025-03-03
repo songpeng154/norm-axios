@@ -1,15 +1,16 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
-import { NormFetchConfig, ResponseContent } from './types.ts'
+import type { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
+import type { NormAxiosConfig, ResponseContent } from './types.ts'
+import axios from 'axios'
 import { omit } from 'es-toolkit'
 
 // 约定式 Axios
-export default class NormFetch<TResponse extends Recordable = Recordable> {
+export default class NormAxios<TResponse extends Recordable = Recordable> {
   public axiosInstance: AxiosInstance
 
-  public axiosConfig: NormFetchConfig<TResponse>
+  public axiosConfig: NormAxiosConfig<TResponse>
 
-  constructor(config: NormFetchConfig<TResponse>) {
-    this.axiosInstance = axios.create(omit(config, [ 'interceptor' ]))
+  constructor(config: NormAxiosConfig<TResponse>) {
+    this.axiosInstance = axios.create(omit(config, ['interceptor']))
     this.axiosConfig = config
 
     // 请求拦截器
@@ -53,7 +54,7 @@ export default class NormFetch<TResponse extends Recordable = Recordable> {
     return this.request<TData, TParams>({ method: 'delete', url, data, ...config })
   }
 
-  static extend<Result extends Recordable = Recordable>(instance: NormFetch<Result>, config?: NormFetchConfig<Result>): NormFetch<Result> {
-    return new NormFetch(Object.assign(instance.axiosConfig, config))
+  static extend<Result extends Recordable = Recordable>(instance: NormAxios<Result>, config?: NormAxiosConfig<Result>): NormAxios<Result> {
+    return new NormAxios(Object.assign(instance.axiosConfig, config))
   }
 }

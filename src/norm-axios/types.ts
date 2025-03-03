@@ -21,7 +21,7 @@ export type ResponseContent<
 ]
 
 // 拦截器
-export interface NormFetchInterceptor<TResponse extends Recordable = Recordable> {
+export interface NormAxiosInterceptor<TResponse extends Recordable = Recordable> {
   // 请求之前拦截器
   onBeforeRequest?: (config: AxiosRequestConfig) => void | Promise<void>
 
@@ -45,9 +45,9 @@ export interface NormFetchInterceptor<TResponse extends Recordable = Recordable>
 }
 
 // 配置
-export interface NormFetchConfig<TResponse extends Recordable = Recordable> extends CreateAxiosDefaults {
+export interface NormAxiosConfig<TResponse extends Recordable = Recordable> extends CreateAxiosDefaults {
   // 拦截器
-  interceptor?: NormFetchInterceptor<TResponse>
+  interceptor?: NormAxiosInterceptor<TResponse>
 }
 
 // 元数据

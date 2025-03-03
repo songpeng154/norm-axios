@@ -1,6 +1,6 @@
 import type { ComputedRef, MaybeRef, Ref, ShallowRef } from 'vue'
-import type { ResponseContent } from '../../fetch/types.ts'
-import type { FetchOptions, FetchResult } from '../fetch/types.ts'
+import type { ResponseContent } from '../../norm-axios/types.ts'
+import type { RequestOptions, RequestResult } from '../request/types.ts'
 
 export interface PaginationResponse<TResponse = any> {
   list: TResponse[]
@@ -72,7 +72,7 @@ export type PaginationAndFetchOptions<
   TRawData = any,
 > =
   PaginationOptions &
-  FetchOptions<TData, TParams, TFormatData, TRawData>
+  RequestOptions<TData, TParams, TFormatData, TRawData>
 
 export interface PaginationResult<
   // 数据
@@ -83,7 +83,7 @@ export interface PaginationResult<
   TFormatData extends PaginationResponse = TData,
   // 原始数据
   TRawData = any,
-> extends FetchResult<TData, TParams, TFormatData, TRawData> {
+> extends RequestResult<TData, TParams, TFormatData, TRawData> {
   /**
    * 列表数据
    */

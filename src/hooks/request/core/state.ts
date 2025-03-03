@@ -1,7 +1,7 @@
-import type { FetchOptions, FetchState } from '../types.ts'
+import type { RequestOptions, RequestState } from '../types.ts'
 import { computed, shallowReactive } from 'vue'
 
-export default function useFetchState<
+export default function useRequestState<
   // 数据
   TData = any,
   // 方法参数
@@ -10,8 +10,8 @@ export default function useFetchState<
   TFormatData = TData,
   // 原始数据
   TRawData = any,
->(options: FetchOptions<TData, TParams, TFormatData, TRawData>) {
-  type State = FetchState<TData, TParams, TFormatData, TRawData>
+>(options: RequestOptions<TData, TParams, TFormatData, TRawData>) {
+  type State = RequestState<TData, TParams, TFormatData, TRawData>
   const state: State = {
     data: options.initialData,
     rawData: undefined,

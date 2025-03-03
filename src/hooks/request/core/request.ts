@@ -1,9 +1,9 @@
-import type { FetchOptions, FetchPluginHooks, FetchServiceFn } from '../types.ts'
+import type { RequestOptions, RequestPluginHooks, RequestServiceFn } from '../types.ts'
 import { isFunction } from 'es-toolkit'
 import { nextTick, ref } from 'vue'
-import useFetchState from './state.ts'
+import useRequestState from './state.ts'
 
-function useCoreFetch<
+function useCoreRequest<
   // 数据
   TData = any,
   // 方法参数
@@ -13,10 +13,10 @@ function useCoreFetch<
   // 原始数据
   TRawData = any,
 >(
-  service: FetchServiceFn<TData, TParams, TRawData>,
-  options: FetchOptions<TData, TParams, TFormatData, TRawData> = {},
+  service: RequestServiceFn<TData, TParams, TRawData>,
+  options: RequestOptions<TData, TParams, TFormatData, TRawData> = {},
 ) {
-  type RequiredFetchPluginHoos = Required<FetchPluginHooks<TData, TParams, TFormatData, TRawData>>
+  type RequiredFetchPluginHoos = Required<RequestPluginHooks<TData, TParams, TFormatData, TRawData>>
 
   const {
     onBefore,
@@ -30,7 +30,7 @@ function useCoreFetch<
   let isCancelled = false
   let isStopExec = false
 
-  const pluginHooks = ref<FetchPluginHooks<TData, TParams, TFormatData, TRawData>[]>([])
+  const pluginHooks = ref<RequestPluginHooks<TData, TParams, TFormatData, TRawData>[]>([])
 
   const {
     data,
@@ -42,7 +42,7 @@ function useCoreFetch<
     finished,
     rawState,
     setState,
-  } = useFetchState<TData, TParams, TFormatData, TRawData>(options)
+  } = useRequestState<TData, TParams, TFormatData, TRawData>(options)
 
   const runPluginHooks = <K extends keyof RequiredFetchPluginHoos>(
     hook: K,
@@ -86,7 +86,7 @@ function useCoreFetch<
     })
 
     try {
-      const [ result, err, res ] = await service(...args)
+      const [result, err, res] = await service(...args)
 
       // 当连续请求的时候，最后一个服务请求完之后
       if (currentCount === count) {
@@ -124,9 +124,11 @@ function useCoreFetch<
       runPluginHooks('onSuccess', finalData, args, res!)
 
       return finalData
-    } catch (e) {
+    }
+    catch (e) {
       console.log(e)
-    } finally {
+    }
+    finally {
       onFinally?.(args)
       runPluginHooks('onFinally', args)
     }
@@ -165,4 +167,4 @@ function useCoreFetch<
   }
 }
 
-export default useCoreFetch
+export default useCoreRequest

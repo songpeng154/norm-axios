@@ -1,4 +1,4 @@
-import NormFetch from './fetch'
-import { useFetch, useGlobalProvider, usePagination } from './hooks'
+import { useGlobalConfigProvider, usePagination, useRequest } from './hooks'
+import NormAxios from './norm-axios'
 
-export default { NormFetch, useFetch, usePagination, useGlobalProvider }
+export default { NormFetch: NormAxios, useFetch: useRequest, usePagination, useGlobalProvider: useGlobalConfigProvider }

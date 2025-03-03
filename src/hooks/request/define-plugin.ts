@@ -1,4 +1,4 @@
-import type { FetchPluginImplement } from './types.ts'
+import type { RequestPluginImplement } from './types.ts'
 
 function definePlugin<
   // 数据
@@ -9,7 +9,7 @@ function definePlugin<
   TFormatData = TData,
   // 原始数据
   TRawData = any,
->(options: FetchPluginImplement<TData, TParams, TFormatData, TRawData>) {
+>(options: RequestPluginImplement<TData, TParams, TFormatData, TRawData>) {
   return options
 }
 

@@ -1,17 +1,23 @@
-import type { FetchContext, FetchOptions, FetchPluginImplement, FetchResult, FetchServiceFn } from './types.ts'
+import type {
+  RequestContext,
+  RequestOptions,
+  RequestPluginImplement,
+  RequestResult,
+  RequestServiceFn,
+} from './types.ts'
 import { omit } from 'es-toolkit'
 import { effectScope, inject, onScopeDispose, ref } from 'vue'
 import useDebounce from '../debounce'
-import { GLOBAL_PROVIDER_SYMBOL } from '../global'
+import { GLOBAL_CONFIG_PROVIDER_SYMBOL } from '../global'
 import useThrottle from '../throttle'
-import useCoreFetch from './core/fetch.ts'
+import useCoreRequest from './core/request.ts'
 import useAutoRunPlugin from './plugins/auto-run.ts'
 import useErrorRetryPlugin from './plugins/error-retry.ts'
 import useLoadingPlugin from './plugins/loading.ts'
 import usePollingPlugin from './plugins/polling.ts'
 import useRefreshOnWindowFocusPlugin from './plugins/window-focus.ts'
 
-export function useFetch<
+export function useRequest<
   // 数据
   TData = any,
   // 方法参数
@@ -21,11 +27,11 @@ export function useFetch<
   // 原始数据
   TRawData = any,
 >(
-  service: FetchServiceFn<TData, TParams, TRawData>,
-  options: FetchOptions<TData, TParams, TFormatData, TRawData> = {},
-  plugins: FetchPluginImplement<TData, TParams, TFormatData, TRawData>[] = [],
-): FetchResult<TData, TParams, TFormatData, TRawData> {
-  const globalProvider = inject(GLOBAL_PROVIDER_SYMBOL)
+  service: RequestServiceFn<TData, TParams, TRawData>,
+  options: RequestOptions<TData, TParams, TFormatData, TRawData> = {},
+  plugins: RequestPluginImplement<TData, TParams, TFormatData, TRawData>[] = [],
+): RequestResult<TData, TParams, TFormatData, TRawData> {
+  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL)
 
   const allPlugins = [
     ...plugins,
@@ -37,7 +43,7 @@ export function useFetch<
     ...(globalProvider?.plugins || []),
   ]
 
-  const config: FetchOptions<TData, TParams, TFormatData, TRawData> = Object.assign(options, globalProvider?.common)
+  const config: RequestOptions<TData, TParams, TFormatData, TRawData> = Object.assign(options, globalProvider?.common)
 
   const scope = effectScope()
 
@@ -52,7 +58,7 @@ export function useFetch<
     throttleTrailing = true,
   } = config
 
-  const fetchInstance = useCoreFetch<TData, TParams, TFormatData, TRawData>(
+  const fetchInstance = useCoreRequest<TData, TParams, TFormatData, TRawData>(
     service,
     config,
   )
@@ -80,7 +86,7 @@ export function useFetch<
     trailing: throttleTrailing,
   })
 
-  const context: FetchContext<TData, TParams, TFormatData, TRawData> = {
+  const context: RequestContext<TData, TParams, TFormatData, TRawData> = {
     ...omit(fetchInstance, ['pluginHooks', 'coreFetch']),
     scope,
     options: config,
