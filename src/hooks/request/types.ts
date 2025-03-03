@@ -2,6 +2,7 @@ import type { AxiosResponse } from 'axios'
 import type { DebouncedFunction } from 'es-toolkit/dist/compat/function/debounce'
 import type { EffectScope, MaybeRef, Ref, WatchSource } from 'vue'
 import type { ResponseContent, ResponseError } from '../../norm-axios/types.ts'
+import type { Undefinable, WrapWithComputed } from '../../types/utils.ts'
 
 export type RequestServiceFn<
   // 数据

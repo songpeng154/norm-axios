@@ -1,4 +1,5 @@
 import type { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
+import type { Recordable } from '../types/utils.ts'
 import type { NormAxiosConfig, ResponseContent } from './types.ts'
 import axios from 'axios'
 import { omit } from 'es-toolkit'

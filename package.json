@@ -8,10 +8,13 @@
     "pnpm": ">=8.7.0"
   },
   "scripts": {
-    "build": "esno scripts/build/index.ts",
+    "build": "rslib build && esno scripts/index.ts",
+    "build:watch": "rslib build --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "type-check": "vue-tsc --noEmit",
+    "publish": "cd ./dist && npm publish"
   },
   "dependencies": {
     "@vueuse/core": "^12.7.0",
@@ -23,17 +26,14 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.16.0",
+    "@rslib/core": "^0.5.3",
     "@types/node": "^22.13.4",
-    "@unocss/eslint-plugin": "^0.65.4",
     "@vitejs/plugin-vue": "^5.2.1",
     "eslint": "^9.20.1",
     "esno": "^4.8.0",
     "lint-staged": "^15.4.3",
     "simple-git-hooks": "^2.11.1",
-    "typescript": "~5.6.3",
-    "vite": "^6.1.0",
-    "vite-plugin-dts": "^4.5.0",
-    "vitest": "^2.1.9",
+    "typescript": "~5.7.3",
     "vue-tsc": "^2.2.2"
   },
   "simple-git-hooks": {

@@ -1,4 +1,5 @@
 import type { AxiosError, AxiosRequestConfig, AxiosResponse, CreateAxiosDefaults } from 'axios'
+import type { Recordable } from '../types/utils.ts'
 import 'axios'
 
 // 响应错误

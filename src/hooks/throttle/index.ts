@@ -1,5 +1,6 @@
 import type { DebouncedFunction } from 'es-toolkit/dist/compat/function/debounce'
 import type { MaybeRef } from 'vue'
+import type { AnyFunction } from '../../types/utils.ts'
 import { throttle } from 'es-toolkit/compat'
 import { toValue, watchEffect } from 'vue'
 

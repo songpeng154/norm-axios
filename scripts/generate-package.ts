@@ -1,24 +1,25 @@
 import * as fs from 'node:fs'
 import { resolve } from 'node:path'
-import { BUNDLE_PATH } from './utils/paths.ts'
+import { BUNDLE_PATH } from './path.ts'
 
 const packageJson = {
   name: 'norm-axios',
-  version: '0.2.2',
+  version: '1.0.0-beta.2',
   description: 'Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。',
-  main: 'lib/index.js',
-  module: 'es/index.js',
-  types: 'es/index.d.ts',
-  unpkg: 'umd/index.min.js',
-  jsdelivr: 'umd/index.min.js',
+  main: 'cjs/index.cjs',
+  module: 'esm/index.js',
+  types: 'esm/index.d.ts',
+  unpkg: 'umd/index.js',
+  jsdelivr: 'umd/index.js',
   exports: {
     '.': {
-      types: './es/index.d.ts',
-      import: './es/index.mjs',
-      require: './lib/index.cjs',
+      types: './esm/index.d.ts',
+      import: './esm/index.js',
+      require: './cjs/index.cjs',
     },
   },
-  keywords: ['axios', 'demo'],
+  files: ['cjs', 'esm', 'umd'],
+  keywords: ['axios', 'vue', 'vue-request'],
   author: 'SongPeng <419626398@qq.com>',
   license: 'MIT',
   homepage: 'https://github.com/songpeng154/norm-axios.git',
