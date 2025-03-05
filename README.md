@@ -13,18 +13,11 @@
     <img src="https://img.shields.io/npm/dm/norm-axios.svg" />
   </a>
   <a href="https://www.npmjs.com/package/norm-axios">
-    <img src="https://img.shields.io/bundlephobia/minzip/norm-axios" alt="Size" />
-  </a>
-  <a href="https://www.npmjs.com/package/norm-axios">
     <img src="https://img.shields.io/github/languages/top/songpeng154/norm-axios" alt="Languages" />
   </a>
   <a href="https://www.npmjs.com/package/norm-axios">
     <img src="https://img.shields.io/npm/l/norm-axios" alt="License" />
   </a>
-  <a href="https://github.com/songpeng154/norm-axios/stargazers">
-    <img src="https://img.shields.io/github/stars/songpeng154/norm-axios" alt="Star" />
-  </a>
-  <br>
 </p>
 <p align="center">
 Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。
