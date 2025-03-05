@@ -6,21 +6,16 @@
 <b>Norm Axios</b>
 </p>
 <p align="center">
-<style>
-.no_underline{
-    text-decoration: none;
-}
-</style>
-  <a class="no_underline" href="https://www.npmjs.org/package/norm-axios">
+  <a href="https://www.npmjs.org/package/norm-axios">
     <img src="https://img.shields.io/npm/v/norm-axios.svg" />
   </a>
-  <a class="no_underline" href="https://npmcharts.com/compare/norm-axios?minimal=true">
+  <a href="https://npmcharts.com/compare/norm-axios?minimal=true">
     <img src="https://img.shields.io/npm/dm/norm-axios.svg" />
   </a>
-  <a class="no_underline" href="https://www.npmjs.com/package/norm-axios">
+  <a href="https://www.npmjs.com/package/norm-axios">
     <img src="https://img.shields.io/github/languages/top/songpeng154/norm-axios" alt="Languages" />
   </a>
-  <a class="no_underline" href="https://www.npmjs.com/package/norm-axios">
+  <a href="https://www.npmjs.com/package/norm-axios">
     <img src="https://img.shields.io/npm/l/norm-axios" alt="License" />
   </a>
 </p>
