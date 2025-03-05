@@ -18,7 +18,7 @@ export function usePagination<
   service: PaginationServiceFn<TData, TRawData>,
   options: PaginationAndFetchOptions<TData, TParams, TFormatData, TRawData> = {},
 ): PaginationResult<TData, TParams, TFormatData, TRawData> {
-  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL)
+  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL,{})
 
   const config: PaginationAndFetchOptions<TData, TParams, TFormatData, TRawData> = Object.assign(options, globalProvider?.pagination)
 

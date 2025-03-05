@@ -1,11 +1,12 @@
 import * as fs from 'node:fs'
 import { resolve } from 'node:path'
+import PackageInfo from '../package.json'
 import { BUNDLE_PATH } from './path.ts'
 
 const packageJson = {
-  name: 'norm-axios',
-  version: '1.0.0-beta.2',
-  description: 'Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。',
+  name: PackageInfo.name,
+  version: PackageInfo.version,
+  description: PackageInfo.description,
   main: 'cjs/index.cjs',
   module: 'esm/index.js',
   types: 'esm/index.d.ts',
@@ -30,16 +31,10 @@ const packageJson = {
   bugs: {
     url: 'https://github.com/songpeng154/norm-axios.gitt/issues',
   },
-  dependencies: {
-    '@vueuse/core': '^12.5.x',
-    'es-toolkit': '^1.32.x',
-  },
-  peerDependencies: {
-    vue: '^3.5.x',
-    axios: '^1.7.x',
-  },
+  dependencies: PackageInfo.dependencies,
+  peerDependencies: PackageInfo.peerDependencies,
 }
 
-export const generatePackageJsonFile = () => {
+export function generatePackageJsonFile() {
   fs.writeFileSync(resolve(BUNDLE_PATH, 'package.json'), JSON.stringify(packageJson, null, 2), 'utf8')
 }

@@ -8,4 +8,8 @@ export * from './pagination/types'
 
 export * from './request/index'
 export * from './request/types'
+
+export * from './throttle/index'
+export * from './debounce/index'
+
 export { definePlugin }
