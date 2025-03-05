@@ -9,35 +9,20 @@
   <a href="https://www.npmjs.org/package/norm-axios">
     <img src="https://img.shields.io/npm/v/norm-axios.svg" />
   </a>
-  <a href="https://github.com/songpeng154/norm-axios">
-    <img src="https://img.shields.io/badge/node-%20%3E%3D%2018-47c219" />
-  </a>
   <a href="https://npmcharts.com/compare/norm-axios?minimal=true">
     <img src="https://img.shields.io/npm/dm/norm-axios.svg" />
-  </a>
-<a href="https://codecov.io/github/attojs/norm-axios?branch=master">
-    <img
-      src="https://img.shields.io/codecov/c/github/attojs/norm-axios?token=NW2XVQWGPP"
-      alt="Coverage Status"
-    />
   </a>
   <a href="https://www.npmjs.com/package/norm-axios">
     <img src="https://img.shields.io/bundlephobia/minzip/norm-axios" alt="Size" />
   </a>
   <a href="https://www.npmjs.com/package/norm-axios">
-    <img src="https://img.shields.io/npm/v/norm-axios" alt="Version" />
-  </a>
-  <a href="https://www.npmjs.com/package/norm-axios">
-    <img src="https://img.shields.io/github/languages/top/attojs/norm-axios" alt="Languages" />
+    <img src="https://img.shields.io/github/languages/top/songpeng154/norm-axios" alt="Languages" />
   </a>
   <a href="https://www.npmjs.com/package/norm-axios">
     <img src="https://img.shields.io/npm/l/norm-axios" alt="License" />
   </a>
-  <a href="https://github.com/AttoJS/norm-axios/stargazers">
-    <img src="https://img.shields.io/github/stars/attojs/norm-axios" alt="Star" />
-  </a>
-  <a href="https://www.npmjs.com/package/norm-axios">
-    <img src="https://img.shields.io/npm/dm/norm-axios" alt="Download" />
+  <a href="https://github.com/songpeng154/norm-axios/stargazers">
+    <img src="https://img.shields.io/github/stars/songpeng154/norm-axios" alt="Star" />
   </a>
   <br>
 </p>
