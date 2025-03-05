@@ -6,16 +6,21 @@
 <b>Norm Axios</b>
 </p>
 <p align="center">
-  <a style="text-decoration: none" href="https://www.npmjs.org/package/norm-axios">
+<style>
+.no_underline{
+    text-decoration: none;
+}
+</style>
+  <a class="no_underline" href="https://www.npmjs.org/package/norm-axios">
     <img src="https://img.shields.io/npm/v/norm-axios.svg" />
   </a>
-  <a style="text-decoration: none" href="https://npmcharts.com/compare/norm-axios?minimal=true">
+  <a class="no_underline" href="https://npmcharts.com/compare/norm-axios?minimal=true">
     <img src="https://img.shields.io/npm/dm/norm-axios.svg" />
   </a>
-  <a style="text-decoration: none" href="https://www.npmjs.com/package/norm-axios">
+  <a class="no_underline" href="https://www.npmjs.com/package/norm-axios">
     <img src="https://img.shields.io/github/languages/top/songpeng154/norm-axios" alt="Languages" />
   </a>
-  <a style="text-decoration: none" href="https://www.npmjs.com/package/norm-axios">
+  <a class="no_underline" href="https://www.npmjs.com/package/norm-axios">
     <img src="https://img.shields.io/npm/l/norm-axios" alt="License" />
   </a>
 </p>
@@ -29,10 +34,10 @@ Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的�
 * 简化了数据获取流程，自动处理请求状态，减少了冗余代码。
 * 简化了分页处理，自动管理分页状态，减少了手动编写分页逻辑的麻烦。
 
-
 ## 特性
+
 * 🌐 统一多后端服务的数据结构
-* ⚡  响应式数据
+* ⚡ 响应式数据
 * 🔄 轮询请求
 * ♻️ 自动处理错误重试
 * 💾 内存缓存策略
@@ -48,6 +53,7 @@ Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的�
 [详细文档](https://songpeng154.github.io/norm-axios/)
 
 ## 致谢
+
 * [Axios](https://github.com/axios/axios)
 * [VueReuquest](https://github.com/attojs/vue-request)
 * [VueHookPlus](https://github.com//InhiblabCore/vue-hooks-plus)
