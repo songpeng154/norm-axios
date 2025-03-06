@@ -51,7 +51,8 @@ function useCoreRequest<
     for (const pluginHook of pluginHooks.value) {
       // @ts-expect-error ignore
       pluginHook[hook]?.(...args)
-      if (isStopExec) break
+      if (isStopExec)
+        break
     }
   }
 
@@ -96,7 +97,8 @@ function useCoreRequest<
 
       // 取消请求
       if (isCancelled) {
-        if (currentCount === count) isCancelled = false
+        if (currentCount === count)
+          isCancelled = false
         return data.value
       }
 

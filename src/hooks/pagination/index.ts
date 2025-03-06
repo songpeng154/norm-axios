@@ -18,7 +18,7 @@ export function usePagination<
   service: PaginationServiceFn<TData, TRawData>,
   options: PaginationAndFetchOptions<TData, TParams, TFormatData, TRawData> = {},
 ): PaginationResult<TData, TParams, TFormatData, TRawData> {
-  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL,{})
+  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL, {})
 
   const config: PaginationAndFetchOptions<TData, TParams, TFormatData, TRawData> = Object.assign(options, globalProvider?.pagination)
 
@@ -54,7 +54,8 @@ export function usePagination<
       ]),
       onSuccess(data, params, response) {
         onSuccess?.(data, params, response)
-        if (!addedMode) return
+        if (!addedMode)
+          return
         // 数据追加
         list.value = (page.value <= lastPage.value ? data.list : [...list.value, ...data.list]) ?? []
         lastPage.value = page.value

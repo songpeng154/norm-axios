@@ -35,11 +35,15 @@ const useLoadingPlugin = definePlugin(({ options, setState }) => {
   const handleLoadingKeep = (requestStartTime: number) => {
     const requestTime = Date.now() - requestStartTime
     // 如果 loadingKeep 不存在或者 请求时间 大于等于 保持时间
-    if (!loadingKeepRef.value || requestTime >= loadingKeepRef.value) setLoading(false)
-    // 如果 请求时间 小于 保持时间
-    else if (requestTime < loadingKeepRef.value) startKeep(loadingKeepRef.value - requestTime, () => {
+    if (!loadingKeepRef.value || requestTime >= loadingKeepRef.value) {
       setLoading(false)
-    })
+    }
+    // 如果 请求时间 小于 保持时间
+    else if (requestTime < loadingKeepRef.value) {
+      startKeep(loadingKeepRef.value - requestTime, () => {
+        setLoading(false)
+      })
+    }
   }
 
   return {

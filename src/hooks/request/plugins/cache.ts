@@ -38,18 +38,21 @@ const useCachePlugin = definePlugin(({ options, setState }) => {
   const { cacheKey, staleTime = 0, cacheTime = 600000 } = options
 
   const getCache = () => {
-    if (!cacheKey) return
+    if (!cacheKey)
+      return
 
     return CACHE_STORE.get(cacheKey)
   }
 
   const deleteCache = () => {
-    if (!cacheKey) return
+    if (!cacheKey)
+      return
     CACHE_STORE.delete(cacheKey)
   }
 
   const setCache = (cacheData: CachedData) => {
-    if (!cacheKey) return
+    if (!cacheKey)
+      return
     CACHE_STORE.set(cacheKey, cacheData)
   }
 
@@ -59,23 +62,29 @@ const useCachePlugin = definePlugin(({ options, setState }) => {
 
   const cache = getCache()
 
-  if (cache) setState({
-    ...omit(cache, ['time']),
-  })
+  if (cache) {
+    setState({
+      ...omit(cache, ['time']),
+    })
+  }
 
   return {
     onBefore(_, stopExec) {
       const cache = getCache()
-      if (!cache) return
-      if (isFresh(cache.time)) stopExec()
+      if (!cache)
+        return
+      if (isFresh(cache.time))
+        stopExec()
       setState({
         ...omit(cache, ['time']),
       })
     },
     onSuccess(data, params, response) {
-      if (!cacheKey) return
+      if (!cacheKey)
+        return
       const cache = getCache()
-      if (cache?.timer) clearTimeout(cache.timer)
+      if (cache?.timer)
+        clearTimeout(cache.timer)
       const timer = setTimeout(() => deleteCache(), cacheTime)
       setCache({
         data,

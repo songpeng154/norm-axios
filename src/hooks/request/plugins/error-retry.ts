@@ -33,8 +33,8 @@ const useErrorRetryPlugin = definePlugin(({ finished, options, refresh }) => {
       resetErrorCount()
     },
     onError() {
-      console.log(finished.value)
-      if (isStopRetry.value) return resetErrorCount()
+      if (isStopRetry.value)
+        return resetErrorCount()
 
       updateErrorCount()
       timer = setTimeout(refresh, retryIntervalRef.value)

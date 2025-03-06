@@ -34,7 +34,8 @@ function useDebounce<F extends AnyFunction>(fn: F, ms: MaybeRef<number>, options
   let debounceFn: DebouncedFunction<F> = createDebounceFn()
 
   watchEffect(() => {
-    if (debounceFn) debounceFn.cancel()
+    if (debounceFn)
+      debounceFn.cancel()
     debounceFn = createDebounceFn()
   })
 

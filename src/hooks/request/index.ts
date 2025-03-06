@@ -31,7 +31,7 @@ export function useRequest<
   options: RequestOptions<TData, TParams, TFormatData, TRawData> = {},
   plugins: RequestPluginImplement<TData, TParams, TFormatData, TRawData>[] = [],
 ): RequestResult<TData, TParams, TFormatData, TRawData> {
-  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL,{})
+  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL, {})
 
   const allPlugins = [
     ...plugins,
@@ -64,7 +64,8 @@ export function useRequest<
   )
 
   const run = async (...args: TParams) => {
-    if (!ready.value) return
+    if (!ready.value)
+      return
     return fetchInstance.coreFetch(...args)
   }
 

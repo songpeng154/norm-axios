@@ -14,13 +14,15 @@ const useRefreshOnWindowFocusPlugin = definePlugin(({ refresh, options, scope })
 
   scope.run(() => {
     watch(isFocus, () => {
-      if (!isRefreshOnWindowFocus.value) return
+      if (!isRefreshOnWindowFocus.value)
+        return
       // 记录失去焦点的时间
-      if (!isFocus.value) return startTime.value = Date.now()
+      if (!isFocus.value)
+        return startTime.value = Date.now()
       // 检查时间间隔是否符合条件
-      if (focusTimespanRef.value && Date.now() - startTime.value < focusTimespanRef.value) return
+      if (focusTimespanRef.value && Date.now() - startTime.value < focusTimespanRef.value)
+        return
 
-      console.log('刷新执行了')
       void refresh()
     })
   })

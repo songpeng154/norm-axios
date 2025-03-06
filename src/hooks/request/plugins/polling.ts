@@ -60,7 +60,8 @@ const usePollingPlugin = definePlugin(({ finished, refresh, options }) => {
       updateErrorCount()
     },
     onFinally() {
-      if (isStopPolling.value) return resetErrorCount()
+      if (isStopPolling.value)
+        return resetErrorCount()
 
       timer = setTimeout(refresh, pollingIntervalRef.value)
     },
