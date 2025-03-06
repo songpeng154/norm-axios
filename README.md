@@ -1,6 +1,6 @@
 <p align="center">
 
-  <img width="300px" src="https://foruda.gitee.com/images/1741253432474453368/4070edb6_13825441.png">
+  <img width="300px" src="https://github.com/user-attachments/assets/794c4934-aaa0-4e00-b8ba-15a5bfce6a3f">
 </p>
 <h1 align="center">
 <b>Norm Axios</b>
