@@ -1,6 +1,7 @@
-import type { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosStatic } from 'axios'
+import type { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
 import type { Recordable } from '../types/utils.ts'
 import type { NormAxiosConfig, ResponseContent } from './types.ts'
+import axios from 'axios'
 import { omit } from 'es-toolkit'
 
 // 约定式 Axios
@@ -9,7 +10,7 @@ export default class NormAxios<TResponse extends Recordable = Recordable> {
 
   public axiosConfig: NormAxiosConfig<TResponse>
 
-  constructor(axios: AxiosStatic, config: NormAxiosConfig<TResponse>) {
+  constructor(config: NormAxiosConfig<TResponse>) {
     this.axiosInstance = axios.create(omit(config, ['interceptor']))
     this.axiosConfig = config
 
@@ -54,7 +55,7 @@ export default class NormAxios<TResponse extends Recordable = Recordable> {
     return this.request<TData, TParams>({ method: 'delete', url, data, ...config })
   }
 
-  static extend<Result extends Recordable = Recordable>(axios: AxiosStatic, instance: NormAxios<Result>, config?: NormAxiosConfig<Result>): NormAxios<Result> {
-    return new NormAxios(axios, Object.assign(instance.axiosConfig, config))
+  static extend<Result extends Recordable = Recordable>(instance: NormAxios<Result>, config?: NormAxiosConfig<Result>): NormAxios<Result> {
+    return new NormAxios(Object.assign(instance.axiosConfig, config))
   }
 }

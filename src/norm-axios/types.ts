@@ -33,7 +33,7 @@ export interface NormAxiosInterceptor<TResponse extends Recordable = Recordable>
    * 不要出现该类似的操作：return Promise.reject(responseContent),请直接 return responseContent
    * @param response
    */
-  onResponse?: (response: AxiosResponse<TResponse>) => ResponseContent<TResponse> | Promise<ResponseContent<TResponse>>
+  onResponse?: (response: AxiosResponse<TResponse>) => ResponseContent<any, TResponse> | Promise<ResponseContent<any, TResponse>>
 
   /**
    * 响应错误

@@ -1,9 +1,14 @@
 {
   "name": "norm-axios",
   "type": "module",
-  "version": "1.0.0-beta.25",
+  "version": "1.0.0-beta.29",
   "description": "Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。",
   "license": "MIT",
+  "author": {
+    "email": "419626398@qq.com",
+    "name": "songpeng154",
+    "url": "https://github.com/songpeng154"
+  },
   "engines": {
     "node": ">=18.12.0",
     "pnpm": ">=8.7.0"
@@ -18,7 +23,7 @@
     "publish": "cd ./dist && npm publish"
   },
   "peerDependencies": {
-    "axios": "^1.7.9",
+    "axios": "^1.8.1",
     "vue": "^3.5.13"
   },
   "dependencies": {
