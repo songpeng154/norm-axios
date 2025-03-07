@@ -66,7 +66,7 @@ function useCoreRequest<
     /**
      * Tip 为什么使用 nextTick 包裹。
      * 是为了防止在 watchEffect 中使用的时候自动收集到 onBefore 中可能存在的依赖。
-     * 为什么下边的 onSuccess 不需要包裹，因为 watchEffect 会在其回调函数首次运行时自动收集所有在回调中访问的响应式变量作为依赖
+     * 为什么下边的 onSuccess 之类的不需要包裹，因为 watchEffect 会在其回调函数首次运行时自动收集所有在回调中访问的响应式变量作为依赖
      */
     void nextTick(() => {
       onBefore?.(args)
@@ -87,7 +87,13 @@ function useCoreRequest<
     })
 
     try {
-      const [result, err, res] = await service(...args)
+      const content = await service(...args)
+
+      if (!(Array.isArray(content))) {
+        return Promise.reject(new TypeError('请 server 返回正确的 ResponseContent 类型格式'))
+      }
+
+      const [result, err, res] = content
 
       // 当连续请求的时候，最后一个服务请求完之后
       if (currentCount === count) {
@@ -128,7 +134,7 @@ function useCoreRequest<
       return finalData
     }
     catch (e) {
-      console.log(e)
+      return Promise.reject(e)
     }
     finally {
       onFinally?.(args)
