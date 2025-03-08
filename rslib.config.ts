@@ -18,6 +18,7 @@ export default defineConfig({
       format: 'esm',
       autoExternal,
       output: {
+        target: 'web',
         distPath: {
           root: './dist/esm',
         },
@@ -28,6 +29,7 @@ export default defineConfig({
       format: 'cjs',
       autoExternal,
       output: {
+        target: 'node',
         distPath: {
           root: './dist/cjs',
         },
@@ -38,6 +40,7 @@ export default defineConfig({
       format: 'umd',
       umdName: 'NormAxios',
       output: {
+        target: 'web',
         minify: true,
         distPath: {
           root: './dist/umd',
@@ -50,7 +53,4 @@ export default defineConfig({
       dts,
     },
   ],
-  output: {
-    target: 'web',
-  },
 })

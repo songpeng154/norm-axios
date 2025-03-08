@@ -2,7 +2,7 @@ import { toRef } from 'vue'
 import definePlugin from '../define-plugin.ts'
 
 const useLoadingPlugin = definePlugin(({ options, setState }) => {
-  const { loadingKeep = 300, loadingDelay } = options
+  const { loadingKeep = 0, loadingDelay = 0 } = options
 
   // 请求开始时间
   let startTime: number

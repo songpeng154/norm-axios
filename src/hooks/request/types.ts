@@ -79,7 +79,6 @@ export interface RequestOptions<
    * 可以让 loading 持续指定的时间 (毫秒)，可以防止 loading 一闪而过
    * 如果请求时间少于指定的时间，则最终时间为指定的时间
    * 如果请求时间大于指定的时间，则最终时间为请求的时间
-   * @default 300ms
    */
   loadingKeep?: MaybeRef<number>
 

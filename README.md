@@ -2,7 +2,7 @@
   <img width="200px" src="https://github.com/user-attachments/assets/794c4934-aaa0-4e00-b8ba-15a5bfce6a3f">
 </p>
 <h1 align="center">
-<b>Norm Axios</b>
+<b>𝓝𝓸𝓻𝓶 𝓐𝔁𝓲𝓸𝓼</b>
 </h1>
 <p align="center">
   <a href="https://www.npmjs.org/package/norm-axios">
