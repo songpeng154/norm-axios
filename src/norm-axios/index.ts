@@ -35,11 +35,6 @@ export default class NormAxios<TResponse extends Recordable = Recordable> {
   }
 
   public get<TData = any, TParams extends Recordable = Recordable>(url: string, params?: TParams, config?: AxiosRequestConfig<TParams>) {
-    this.request({
-      url: '/userinfo',
-      method: 'get',
-      params,
-    })
     return this.request<TData, TParams>({ method: 'get', url, params, ...config })
   }
 
