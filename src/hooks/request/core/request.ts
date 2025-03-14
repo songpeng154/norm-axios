@@ -98,7 +98,7 @@ function useCoreRequest<
       // 当连续请求的时候，最后一个服务请求完之后
       if (currentCount === count) {
         setState({ finished: true })
-        runPluginHooks('onFinallyFetchDone')
+        runPluginHooks('onFinallyFetchDone', args)
       }
 
       // 取消请求

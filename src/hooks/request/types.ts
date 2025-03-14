@@ -307,11 +307,19 @@ export interface RequestMethod<
   cancel: () => void
 
   /**
-   * 更改 data 数据,不会更改 rawData 和 response 中的数据
+   * 突变，立即更改 data 数据
+   * 不会更改 rawData 和 response 中的数据
    */
   mutate: (
     newData: TFormatData | ((oldData: TFormatData) => TFormatData),
   ) => void
+
+  // /**
+  //  * 乐观更新,立即更改 data 数据，并且自动在背后发起请求
+  //  *
+  //  * 不会更改 rawData 和 response 中的数据
+  //  */
+  // optimisticUpdate: (newData: TFormatData) => void
 }
 
 export type RequestResult<
@@ -363,7 +371,7 @@ export interface RequestPluginHooks<
   /**
    * 当连续请求的时候，最后一个服务请求完成之后触发
    */
-  onFinallyFetchDone?: () => void
+  onFinallyFetchDone?: (params: TParams) => void
 
   /**
    * 最后执行，不管 server 成功还是失败都会执行

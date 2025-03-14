@@ -1,7 +1,7 @@
 {
   "name": "norm-axios",
   "type": "module",
-  "version": "1.0.0-beta.33",
+  "version": "1.0.0-beta.34",
   "description": "Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。",
   "license": "MIT",
   "author": {
@@ -16,6 +16,8 @@
   "scripts": {
     "build": "rslib build && esno scripts/index.ts",
     "build:watch": "rslib build --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint-staged": "lint-staged",
@@ -27,19 +29,23 @@
     "vue": "^3.5.13"
   },
   "dependencies": {
-    "@vueuse/core": "^12.7.0",
-    "es-toolkit": "^1.32.0"
+    "@vueuse/core": "^12.8.2",
+    "es-toolkit": "^1.33.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.5.1",
-    "@rslib/core": "^0.5.3",
-    "@types/node": "^22.13.4",
+    "@antfu/eslint-config": "^4.10.1",
+    "@rslib/core": "^0.5.4",
+    "@testing-library/vue": "^8.1.0",
+    "@types/node": "^22.13.10",
     "@vitejs/plugin-vue": "^5.2.1",
-    "eslint": "^9.20.1",
+    "@vitest/ui": "^3.0.8",
+    "@vue/test-utils": "^2.4.6",
+    "eslint": "^9.22.0",
     "esno": "^4.8.0",
-    "lint-staged": "^15.4.3",
+    "happy-dom": "^17.4.4",
+    "lint-staged": "^15.5.0",
     "simple-git-hooks": "^2.11.1",
-    "vue-tsc": "^2.2.2"
+    "vitest": "^3.0.8"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"

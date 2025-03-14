@@ -9,6 +9,8 @@ export interface ResponseError {
   msg: string
 
   axiosError?: AxiosError
+
+  test?: Test234
 }
 
 // 响应内容

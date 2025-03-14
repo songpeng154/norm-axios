@@ -20,6 +20,7 @@
       "./node_modules"
     ],
     "types": [
+      "vitest/globals",
       "node"
     ],
     "allowImportingTsExtensions": true,
@@ -28,12 +29,14 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "declaration": true,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "allowJs": true
   },
   "include": [
     "./**/*.ts",
