@@ -12,6 +12,7 @@ import { GLOBAL_CONFIG_PROVIDER_SYMBOL } from '../global'
 import useThrottle from '../throttle'
 import useCoreRequest from './core/request.ts'
 import useAutoRunPlugin from './plugins/auto-run.ts'
+import useCachePlugin from './plugins/cache.ts'
 import useErrorRetryPlugin from './plugins/error-retry.ts'
 import useLoadingPlugin from './plugins/loading.ts'
 import usePollingPlugin from './plugins/polling.ts'
@@ -40,6 +41,7 @@ export function useRequest<
     useRefreshOnWindowFocusPlugin,
     usePollingPlugin,
     useErrorRetryPlugin,
+    useCachePlugin,
     ...(globalProvider?.plugins || []),
   ]
 
@@ -64,8 +66,7 @@ export function useRequest<
   )
 
   const run = async (...args: TParams) => {
-    if (!ready.value)
-      return
+    if (!ready.value) return
     return fetchInstance.coreFetch(...args)
   }
 

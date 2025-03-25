@@ -179,7 +179,7 @@ export interface RequestOptions<
   /**
    * 格式化数据
    */
-  formatData?: (data: TData, params: TParams, response: AxiosResponse<TRawData>) => TFormatData
+  formatData?: (data: TData, params: TParams, response?: AxiosResponse<TRawData>) => TFormatData
 
   /**
    * 请求之前执行
@@ -196,7 +196,7 @@ export interface RequestOptions<
   onSuccess?: (
     data: TFormatData,
     params: TParams,
-    response: AxiosResponse<TRawData>,
+    response?: AxiosResponse<TRawData>,
   ) => void
 
   /**
@@ -208,7 +208,7 @@ export interface RequestOptions<
   onError?: (
     error: ResponseError,
     params: TParams,
-    response: AxiosResponse<TRawData>,
+    response?: AxiosResponse<TRawData>,
   ) => void
 
   /**
@@ -356,7 +356,7 @@ export interface RequestPluginHooks<
   onError?: (
     error: ResponseError,
     params: TParams,
-    response: AxiosResponse<TRawData>,
+    response?: AxiosResponse<TRawData>,
   ) => void
 
   /**
@@ -365,7 +365,7 @@ export interface RequestPluginHooks<
   onSuccess?: (
     data: TFormatData,
     params: TParams,
-    response: AxiosResponse<TRawData>,
+    response?: AxiosResponse<TRawData>,
   ) => void
 
   /**

@@ -51,8 +51,7 @@ function useCoreRequest<
     for (const pluginHook of pluginHooks.value) {
       // @ts-expect-error ignore
       pluginHook[hook]?.(...args)
-      if (isStopExec)
-        break
+      if (isStopExec) break
     }
   }
 
@@ -68,13 +67,17 @@ function useCoreRequest<
      * 是为了防止在 watchEffect 中使用的时候自动收集到 onBefore 中可能存在的依赖。
      * 为什么下边的 onSuccess 之类的不需要包裹，因为 watchEffect 会在其回调函数首次运行时自动收集所有在回调中访问的响应式变量作为依赖
      */
-    void nextTick(() => {
-      onBefore?.(args)
-      runPluginHooks('onBefore', args, stopExec)
-    })
+    await nextTick()
+
+    onBefore?.(args)
+    runPluginHooks('onBefore', args, stopExec)
 
     if (isStopExec) {
       isStopExec = false
+      setState({
+        loading: false,
+        finished: true,
+      })
       return
     }
 
@@ -89,9 +92,8 @@ function useCoreRequest<
     try {
       const content = await service(...args)
 
-      if (!(Array.isArray(content))) {
-        return Promise.reject(new TypeError('请 server 返回正确的 ResponseContent 类型格式'))
-      }
+      if (!(Array.isArray(content)))
+        return Promise.reject(new TypeError('server 请返回正确的 ResponseContent 类型格式'))
 
       const [result, err, res] = content
 
@@ -103,8 +105,7 @@ function useCoreRequest<
 
       // 取消请求
       if (isCancelled) {
-        if (currentCount === count)
-          isCancelled = false
+        if (currentCount === count) isCancelled = false
         return data.value
       }
 
