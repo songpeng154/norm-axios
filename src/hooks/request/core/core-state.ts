@@ -1,7 +1,7 @@
 import type { RequestOptions, RequestState } from '../types.ts'
 import { computed, shallowReactive } from 'vue'
 
-export default function useRequestState<
+export default function useCoreState<
   // 数据
   TData = any,
   // 方法参数
@@ -12,6 +12,7 @@ export default function useRequestState<
   TRawData = any,
 >(options: RequestOptions<TData, TParams, TFormatData, TRawData>) {
   type State = RequestState<TData, TParams, TFormatData, TRawData>
+
   const state: State = {
     data: options.initialData,
     rawData: undefined,

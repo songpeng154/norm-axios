@@ -1,102 +1,92 @@
-import type { AxiosResponse } from 'axios'
+import type { ResponseContent } from '../../../norm-axios/types.ts'
+import type { CachedData } from '../utils/cache.ts'
 import { omit } from 'es-toolkit'
-import { reactive, watch } from 'vue'
+import { ref } from 'vue'
 import definePlugin from '../define-plugin.ts'
+import cacheEmitter from '../utils/cache-emitter.ts'
+import { getCachePromise, setCachePromise } from '../utils/cache-promise.ts'
+import { getCache, setCache } from '../utils/cache.ts'
 
-export interface CachedData<
-  // 数据
-  TData = any,
-  // 方法参数
-  TParams extends unknown[] = [],
-  // 格式化数据
-  TFormatData = TData,
-  // 原始数据
-  TRawData = any,
-> {
-  // 数据
-  data: TFormatData
+const useCachePlugin = definePlugin(({ options, setState, params }) => {
+  const {
+    cacheKey,
+    staleTime = 0,
+    cacheTime = 600000,
+    getCache: getCustomizeCache,
+    setCache: setCustomizeCache,
+  } = options
+  if (!cacheKey) return
 
-  // 原始数据
-  rawData: TRawData
-
-  // 响应体
-  response?: AxiosResponse<TRawData>
-
-  // 入参
-  params: TParams
-
-  // 请求的开始时间
-  time: number
-
-  // 定时器
-  timer: NodeJS.Timeout
-}
-
-// 缓存存储
-const CACHE_STORE = reactive(new Map<string, CachedData>())
-
-// 缓存 promise
-// const CACHE_PROMISE = new Map<string, Promise<ResponseContent>>()
-
-const useCachePlugin = definePlugin(({ options, setState }) => {
-  const { cacheKey, staleTime = 0, cacheTime = 600000 } = options
-
-  const getCache = () => {
-    if (!cacheKey) return
-
-    return CACHE_STORE.get(cacheKey)
-  }
-
-  const deleteCache = () => {
-    if (!cacheKey) return
-    CACHE_STORE.delete(cacheKey)
-  }
-
-  const setCache = (cacheData: CachedData) => {
-    if (!cacheKey) return
-    CACHE_STORE.set(cacheKey, cacheData)
-  }
+  const isSelfEmit = ref(false)
+  const isUpdate = ref(true)
+  let currentServicePromise: Promise<ResponseContent>
 
   // 是否新鲜的
   const isFresh = (time: number) => staleTime === Infinity || time + staleTime > Date.now()
 
   const setCatchState = (catchData: CachedData) => {
-    setState({
-      ...omit(catchData, ['time', 'timer']),
-    })
+    setState({ ...omit(catchData, ['time', 'timer']) })
   }
 
-  const cache = getCache()
+  const _getCache = (key: string) => {
+    return getCustomizeCache ? getCustomizeCache(key, params.value) : getCache(key)
+  }
+
+  const _setCache = (key: string, cacheData: CachedData) => {
+    setCustomizeCache ? setCustomizeCache(key, cacheData) : setCache(key, cacheTime, cacheData)
+  }
+
+  const cache = _getCache(cacheKey)
 
   if (cache) setCatchState(cache)
 
-  // 数据同步
-  cacheKey && watch(() => CACHE_STORE.get(cacheKey), (value) => {
-    setCatchState(value as any)
+  // 订阅相同的缓存key
+  cacheEmitter.on(cacheKey, (cache) => {
+    if (isSelfEmit.value) {
+      isSelfEmit.value = false
+      return
+    }
+    setCatchState(cache)
   })
 
   return {
-    onBefore(_, stopExec) {
-      const cache = getCache()
+    onBefore() {
+      const cache = _getCache(cacheKey)
       if (!cache) return
       setCatchState(cache)
 
       // 如果新鲜的请求中就停止执行
-      if (isFresh(cache.time)) stopExec()
+      if (isFresh(cache.time)) return { isReturned: true }
+    },
+    onRequest(service, params) {
+      let servicePromise = getCachePromise(cacheKey)
+      if (servicePromise && servicePromise !== currentServicePromise) {
+        isSelfEmit.value = true
+        isUpdate.value = false
+        return { servicePromise }
+      }
+      servicePromise = service(...params)
+      currentServicePromise = servicePromise
+      setCachePromise(cacheKey, servicePromise)
+      return { servicePromise }
     },
     onSuccess(data, params, response) {
-      if (!cacheKey) return
-      const cache = getCache()
-      if (cache?.timer) clearTimeout(cache.timer)
-      const timer = setTimeout(() => deleteCache(), cacheTime)
-      setCache({
+      _setCache(cacheKey, {
         data,
         params: params as [],
         rawData: response?.data,
         response,
         time: Date.now(),
-        timer,
       })
+      const newCache = _getCache(cacheKey)
+      isSelfEmit.value = true
+
+      if (!isUpdate.value) {
+        isUpdate.value = true
+        isSelfEmit.value = false
+      }
+      else
+        cacheEmitter.emit(cacheKey, newCache!)
     },
   }
 })

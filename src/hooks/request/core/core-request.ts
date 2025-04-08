@@ -1,9 +1,13 @@
-import type { RequestOptions, RequestPluginHooks, RequestServiceFn } from '../types.ts'
+import type { ResponseContent } from '../../../norm-axios/types.ts'
+import type { RequestOptions, RequestServiceFn } from '../types.ts'
+import type useCoreState from './core-state.ts'
+import type usePlugins from './plugins.ts'
 import { isFunction } from 'es-toolkit'
-import { nextTick, ref } from 'vue'
-import useRequestState from './state.ts'
+import { ref } from 'vue'
+import useDebounce from '../../debounce'
+import useThrottle from '../../throttle'
 
-function useCoreRequest<
+export default function useCoreRequest<
   // 数据
   TData = any,
   // 方法参数
@@ -13,71 +17,43 @@ function useCoreRequest<
   // 原始数据
   TRawData = any,
 >(
+  {
+    setState,
+    rawState,
+    data,
+  }: ReturnType<typeof useCoreState<TData, TParams, TFormatData, TRawData>>,
   service: RequestServiceFn<TData, TParams, TRawData>,
   options: RequestOptions<TData, TParams, TFormatData, TRawData> = {},
+  runPluginHooks: ReturnType<typeof usePlugins<TData, TParams, TFormatData, TRawData>>['runPluginHooks'],
 ) {
-  type RequiredFetchPluginHoos = Required<RequestPluginHooks<TData, TParams, TFormatData, TRawData>>
-
   const {
+    ready = ref(true),
+    debounceWait = 500,
+    debounceMaxWait,
+    debounceLeading = false,
+    debounceTrailing = true,
+    throttleWait = 500,
+    throttleLeading = true,
+    throttleTrailing = true,
     onBefore,
     onFinally,
     onError,
     onSuccess,
+    onFinallyFetchDone,
     formatData,
   } = options
 
   let count = 0
   let isCancelled = false
-  let isStopExec = false
 
-  const pluginHooks = ref<RequestPluginHooks<TData, TParams, TFormatData, TRawData>[]>([])
+  const coreRequest = async (...args: TParams): Promise<TFormatData | undefined> => {
+    setTimeout(() => {
+      onBefore?.(args)
+    }, 0)
+    const beforeReturn = runPluginHooks('onBefore', args)
 
-  const {
-    data,
-    rawData,
-    response,
-    params,
-    error,
-    loading,
-    finished,
-    rawState,
-    setState,
-  } = useRequestState<TData, TParams, TFormatData, TRawData>(options)
-
-  const runPluginHooks = <K extends keyof RequiredFetchPluginHoos>(
-    hook: K,
-    ...args: Parameters<RequiredFetchPluginHoos[K]>
-  ) => {
-    for (const pluginHook of pluginHooks.value) {
-      // @ts-expect-error ignore
-      pluginHook[hook]?.(...args)
-      if (isStopExec) break
-    }
-  }
-
-  // 停止执行
-  const stopExec = () => {
-    isStopExec = true
-  }
-
-  // 核心请求
-  const coreFetch = async (...args: TParams): Promise<TFormatData | undefined> => {
-    /**
-     * Tip 为什么使用 nextTick 包裹。
-     * 是为了防止在 watchEffect 中使用的时候自动收集到 onBefore 中可能存在的依赖。
-     * 为什么下边的 onSuccess 之类的不需要包裹，因为 watchEffect 会在其回调函数首次运行时自动收集所有在回调中访问的响应式变量作为依赖
-     */
-    await nextTick()
-
-    onBefore?.(args)
-    runPluginHooks('onBefore', args, stopExec)
-
-    if (isStopExec) {
-      isStopExec = false
-      setState({
-        loading: false,
-        finished: true,
-      })
+    if (beforeReturn?.isReturned) {
+      setState({ loading: false, finished: true })
       return
     }
 
@@ -90,16 +66,19 @@ function useCoreRequest<
     })
 
     try {
-      const content = await service(...args)
+      const serviceWrapper = (...params: TParams) => new Promise<ResponseContent<TData, TRawData>>(resolve => resolve(service(...params)))
+      const { servicePromise } = runPluginHooks('onRequest', serviceWrapper, args)
+
+      const content = await (servicePromise || serviceWrapper(...args))
 
       if (!(Array.isArray(content)))
         return Promise.reject(new TypeError('server 请返回正确的 ResponseContent 类型格式'))
 
       const [result, err, res] = content
-
       // 当连续请求的时候，最后一个服务请求完之后
       if (currentCount === count) {
         setState({ finished: true })
+        onFinallyFetchDone?.(args)
         runPluginHooks('onFinallyFetchDone', args)
       }
 
@@ -129,7 +108,6 @@ function useCoreRequest<
       setState({ data: finalData })
 
       onSuccess?.(finalData, args, res!)
-
       runPluginHooks('onSuccess', finalData, args, res!)
 
       return finalData
@@ -141,6 +119,16 @@ function useCoreRequest<
       onFinally?.(args)
       runPluginHooks('onFinally', args)
     }
+  }
+
+  const run = async (...args: TParams) => {
+    if (!ready.value) return
+    return coreRequest(...args)
+  }
+
+  // 刷新
+  const refresh = () => {
+    return run(...rawState.params)
   }
 
   // 取消请求
@@ -159,21 +147,27 @@ function useCoreRequest<
     runPluginHooks('onMutate', data)
   }
 
-  return {
-    data,
-    rawData,
-    response,
-    params,
-    error,
-    loading,
-    finished,
-    pluginHooks,
-    rawState,
-    setState,
-    cancel,
-    mutate,
-    coreFetch,
+  // 乐观更新
+  const optimisticUpdate = (newData: TFormatData | ((oldData: TFormatData) => TFormatData), params: TParams = rawState.params) => {
+    const oldData = rawState.data
+    mutate(newData)
+    run(...params).catch(() => {
+      oldData && mutate(oldData)
+    })
   }
-}
 
-export default useCoreRequest
+  // 防抖 run
+  const debounceRun = useDebounce(run, debounceWait, {
+    maxWait: debounceMaxWait,
+    leading: debounceLeading,
+    trailing: debounceTrailing,
+  })
+
+  // 节流 run
+  const throttleRun = useThrottle(run, throttleWait, {
+    leading: throttleLeading,
+    trailing: throttleTrailing,
+  })
+
+  return { run, refresh, cancel, mutate, optimisticUpdate, debounceRun, throttleRun }
+}

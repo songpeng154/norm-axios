@@ -3,6 +3,7 @@ import type { DebouncedFunction } from 'es-toolkit/dist/compat/function/debounce
 import type { EffectScope, MaybeRef, Ref, WatchSource } from 'vue'
 import type { ResponseContent, ResponseError } from '../../norm-axios/types.ts'
 import type { Undefinable, WrapWithComputed } from '../../types/utils.ts'
+import type { CachedData } from './utils/cache.ts'
 
 export type RequestServiceFn<
   // 数据
@@ -177,6 +178,16 @@ export interface RequestOptions<
   staleTime?: number
 
   /**
+   * 获取自定义缓存
+   */
+  getCache?: (cacheKey: string, params: TParams) => CachedData<TData, TParams, TFormatData, TRawData>
+
+  /**
+   * 设置自定义缓存
+   */
+  setCache?: (cacheKey: string, cacheData: CachedData<TData, TParams, TFormatData, TRawData>) => void
+
+  /**
    * 格式化数据
    */
   formatData?: (data: TData, params: TParams, response?: AxiosResponse<TRawData>) => TFormatData
@@ -216,6 +227,12 @@ export interface RequestOptions<
    * @param params 参数
    */
   onFinally?: (params: TParams) => void
+
+  /**
+   * 当连续请求的时候，最后一个服务请求完成之后触发
+   * @param params
+   */
+  onFinallyFetchDone?: (params: TParams) => void
 }
 
 export interface RequestState<
@@ -310,16 +327,14 @@ export interface RequestMethod<
    * 突变，立即更改 data 数据
    * 不会更改 rawData 和 response 中的数据
    */
-  mutate: (
-    newData: TFormatData | ((oldData: TFormatData) => TFormatData),
-  ) => void
+  mutate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData)) => void
 
-  // /**
-  //  * 乐观更新,立即更改 data 数据，并且自动在背后发起请求
-  //  *
-  //  * 不会更改 rawData 和 response 中的数据
-  //  */
-  // optimisticUpdate: (newData: TFormatData) => void
+  /**
+   * 乐观更新,立即更改 data 数据，并且自动在背后发起请求
+   * 如果更新失败，则会还原到更新之前的数据
+   * 不会更改 rawData 和 response 中的数据
+   */
+  optimisticUpdate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData), params: TParams) => void
 }
 
 export type RequestResult<
@@ -346,9 +361,17 @@ export interface RequestPluginHooks<
 > {
   /**
    * 请求之前触发
-   * @return boolean ｜ void
    */
-  onBefore?: (params: TParams, stopExec: () => void) => void
+  onBefore?: (params: TParams) => {
+    isReturned?: boolean
+  } | void
+
+  /**
+   * 请求开始时触发
+   */
+  onRequest?: (service: (...params: TParams) => Promise<ResponseContent<TData, TRawData>>, params: TParams) => {
+    servicePromise: Promise<ResponseContent<TData, TRawData>>
+  }
 
   /**
    * 请求失败时触发
@@ -381,7 +404,7 @@ export interface RequestPluginHooks<
   /**
    * 通过 mutate 修改数据时触发
    */
-  onMutate?: (data: TFormatData) => void
+  onMutate?: (newData: TFormatData) => void
 
   /**
    * 通过 cancel 取消请求时触发

@@ -5,13 +5,12 @@ import type {
   RequestResult,
   RequestServiceFn,
 } from './types.ts'
-import { omit } from 'es-toolkit'
-import { effectScope, inject, onScopeDispose, ref } from 'vue'
-import useDebounce from '../debounce'
+import { isBoolean } from 'es-toolkit'
+import { effectScope, inject, onScopeDispose, watch, watchEffect } from 'vue'
 import { GLOBAL_CONFIG_PROVIDER_SYMBOL } from '../global'
-import useThrottle from '../throttle'
-import useCoreRequest from './core/request.ts'
-import useAutoRunPlugin from './plugins/auto-run.ts'
+import useCoreRequest from './core/core-request.ts'
+import useCoreState from './core/core-state.ts'
+import usePlugins from './core/plugins.ts'
 import useCachePlugin from './plugins/cache.ts'
 import useErrorRetryPlugin from './plugins/error-retry.ts'
 import useLoadingPlugin from './plugins/loading.ts'
@@ -32,84 +31,64 @@ export function useRequest<
   options: RequestOptions<TData, TParams, TFormatData, TRawData> = {},
   plugins: RequestPluginImplement<TData, TParams, TFormatData, TRawData>[] = [],
 ): RequestResult<TData, TParams, TFormatData, TRawData> {
+  const scope = effectScope()
+
   const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL, {})
 
   const allPlugins = [
     ...plugins,
-    useAutoRunPlugin,
+    useCachePlugin,
+    // useAutoRunPlugin,
     useLoadingPlugin,
     useRefreshOnWindowFocusPlugin,
     usePollingPlugin,
     useErrorRetryPlugin,
-    useCachePlugin,
     ...(globalProvider?.plugins || []),
-  ]
+  ] as RequestPluginImplement<TData, TParams, TFormatData, TRawData>[]
 
-  const config: RequestOptions<TData, TParams, TFormatData, TRawData> = Object.assign(options, globalProvider?.common)
+  const config = Object.assign(options, globalProvider?.common)
 
-  const scope = effectScope()
-
-  const {
-    ready = ref(true),
-    debounceWait = 500,
-    debounceMaxWait,
-    debounceLeading = false,
-    debounceTrailing = true,
-    throttleWait = 500,
-    throttleLeading = true,
-    throttleTrailing = true,
-  } = config
-
-  const fetchInstance = useCoreRequest<TData, TParams, TFormatData, TRawData>(
-    service,
-    config,
-  )
-
-  const run = async (...args: TParams) => {
-    if (!ready.value) return
-    return fetchInstance.coreFetch(...args)
-  }
-
-  // 刷新
-  const refresh = () => {
-    return run(...fetchInstance.rawState.params)
-  }
-
-  // 防抖 run
-  const debounceRun = useDebounce(run, debounceWait, {
-    maxWait: debounceMaxWait,
-    leading: debounceLeading,
-    trailing: debounceTrailing,
-  })
-
-  // 节流 run
-  const throttleRun = useThrottle(run, throttleWait, {
-    leading: throttleLeading,
-    trailing: throttleTrailing,
-  })
+  const { register, runPluginHooks } = usePlugins<TData, TParams, TFormatData, TRawData>(allPlugins)
+  const coreState = useCoreState<TData, TParams, TFormatData, TRawData>(config)
+  const coreRequest = useCoreRequest<TData, TParams, TFormatData, TRawData>(coreState, service, config, runPluginHooks)
 
   const context: RequestContext<TData, TParams, TFormatData, TRawData> = {
-    ...omit(fetchInstance, ['pluginHooks', 'coreFetch']),
+    ...coreState,
+    ...coreRequest,
     scope,
     options: config,
-    run,
-    refresh,
-    debounceRun,
-    throttleRun,
   }
-
-  // @ts-expect-error 无法正确推断
-  fetchInstance.pluginHooks.value = allPlugins.map(plugin => plugin(context)).filter(Boolean)
 
   onScopeDispose(() => {
     scope.stop()
   })
 
+  register(context)
+
+  // 首次默认调用
+  if (!config.manual && config.watchSource !== true)
+    void coreRequest.run(...coreState.rawState.params)
+
+  scope.run(() => {
+    // 依赖自动收集
+    config.watchSource === true && watchEffect(() => {
+      void coreRequest.run(...coreState.rawState.params)
+    })
+
+    // 手动收集依赖
+    !isBoolean(config.watchSource) && config.watchSource && watch(
+      config.watchSource,
+      () => {
+        void coreRequest.run(...coreState.rawState.params)
+      },
+      {
+        deep: config.watchDeep,
+      },
+    )
+  })
+
   return {
-    ...omit(fetchInstance, ['pluginHooks', 'coreFetch', 'setState']),
-    run,
-    refresh,
-    debounceRun,
-    throttleRun,
+    ...coreState,
+    ...coreRequest,
   }
 }

@@ -28,3 +28,10 @@ export function mockResponse(responseContent: ResponseContent, ms: number): () =
     return responseContent
   }
 }
+
+export function mockParamsResponse(ms: number): (params: any) => Promise<ResponseContent> {
+  return async (params: any) => {
+    await asyncAwait(ms)
+    return [params]
+  }
+}

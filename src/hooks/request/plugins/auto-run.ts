@@ -10,24 +10,20 @@ const useAutoRunPlugin = definePlugin(({ rawState, run, scope, options }) => {
 
   scope.run(() => {
     // 依赖自动收集
-    if (watchSource === true) {
-      watchEffect(() => {
-        void run(...rawState.params)
-      })
-    }
+    watchSource === true && watchEffect(() => {
+      void run(...rawState.params)
+    })
 
     // 手动收集依赖
-    if (!isBoolean(watchSource) && watchSource) {
-      watch(
-        watchSource,
-        () => {
-          void run(...rawState.params)
-        },
-        {
-          deep: watchDeep,
-        },
-      )
-    }
+    !isBoolean(watchSource) && watchSource && watch(
+      watchSource,
+      () => {
+        void run(...rawState.params)
+      },
+      {
+        deep: watchDeep,
+      },
+    )
   })
 })
 

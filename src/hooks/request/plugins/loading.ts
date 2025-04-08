@@ -49,15 +49,12 @@ const useLoadingPlugin = definePlugin(({ options, setState }) => {
       // 接口请求时间
       const requestTime = Date.now() - startTime
       // 如果 loadingKeep 不存在或者 请求时间 大于等于 保持时间
-      if (!loadingKeepRef.value || requestTime >= loadingKeepRef.value) {
-        setLoading(false)
-      }
+      if (!loadingKeepRef.value || requestTime >= loadingKeepRef.value) setLoading(false)
+
       // 如果 请求时间 小于 保持时间
-      else if (requestTime < loadingKeepRef.value) {
-        startKeep(loadingKeepRef.value - requestTime, () => {
-          setLoading(false)
-        })
-      }
+      else if (requestTime < loadingKeepRef.value) startKeep(loadingKeepRef.value - requestTime, () => {
+        setLoading(false)
+      })
     },
   }
 })

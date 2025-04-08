@@ -5,11 +5,10 @@ export default config(
     test: false,
     typescript: true,
     lessOpinionated: true,
-
   },
   {
     rules: {
-    // 打印语句
+      // 打印语句
       'no-console': 'off',
       // 强制所有控制语句使用一致的括号样式
       'curly': ['error', 'multi'],
