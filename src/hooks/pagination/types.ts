@@ -42,14 +42,14 @@ export interface PaginationOptions {
 
   /**
    * 追加模式
-   * 开启后会自动追加数据，在加载更多的功能上会用到这个功能
+   * 启用后会自动将新请求的数据追加到已有列表中，例如第一次请求返回 [1, 2, 3]，第二次返回 [4, 5, 6]，最终列表将合并为 [1, 2, 3, 4, 5, 6]。该功能常用于「加载更多」场景。
    * @default false
    */
   addedMode?: boolean
 
   /**
-   * 当 page 与 pageSize 变化的时候自动调用服务
-   * 当 pageWatch 与 watchSource 同事设置为 true 后，page 或者 pageSize变化的时候会调用两遍服务，这个问题可以设置 pageWatch 或者 watchSource来解决
+   * 当 page 变化的时候自动调用服务
+   * 当 pageWatch 与 watchSource 同时设置为 true 后，page 或者 pageSize变化的时候会调用两遍服务，这个问题可以设置 pageWatch 或者 watchSource来解决
    * @default true
    */
   pageWatch?: boolean

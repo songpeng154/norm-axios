@@ -1,5 +1,5 @@
-import { useDocumentVisibility, useWindowFocus } from '@vueuse/core'
-import { computed, ref, toRef } from 'vue'
+import { useDocumentVisibility } from '@vueuse/core'
+import { computed, ref, toRef, watch } from 'vue'
 import definePlugin from '../define-plugin.ts'
 
 const usePollingPlugin = definePlugin(({ finished, refresh, options }) => {
@@ -7,7 +7,6 @@ const usePollingPlugin = definePlugin(({ finished, refresh, options }) => {
     pollingInterval = 0,
     pollingWhenDocumentHidden = false,
     pollingErrorRetryCount = 3,
-    pollingWhenWindowBlur = true,
   } = options
 
   let timer: NodeJS.Timeout
@@ -21,19 +20,15 @@ const usePollingPlugin = definePlugin(({ finished, refresh, options }) => {
   const pollingErrorRetryCountRef = toRef(pollingErrorRetryCount)
   // 窗口不可见的时候继续轮询
   const pollingWhenHiddenRef = toRef(pollingWhenDocumentHidden)
-  // 窗口失去焦点的时候继续轮询
-  const pollingWhenWindowBlurRef = toRef(pollingWhenWindowBlur)
 
   // 文档是否可见
   const documentVisibility = useDocumentVisibility()
-  const windowFocus = useWindowFocus()
 
   // 是否停止轮询
   const isStopPolling = computed(() =>
     pollingIntervalRef.value <= 0
     || (errorCount.value - 1 >= pollingErrorRetryCountRef.value && pollingErrorRetryCountRef.value !== Infinity)
     || (!pollingWhenHiddenRef.value && documentVisibility.value === 'hidden')
-    || (!pollingWhenWindowBlurRef.value && !windowFocus.value)
     || !finished.value,
   )
 
@@ -49,6 +44,12 @@ const usePollingPlugin = definePlugin(({ finished, refresh, options }) => {
     errorCount.value += 1
   }
 
+  watch(documentVisibility, () => {
+    // 窗口可见时恢复轮询
+    if (documentVisibility.value === 'visible' && !isStopPolling.value)
+      refresh()
+  })
+
   return {
     onBefore() {
       clearTimer()
@@ -60,8 +61,7 @@ const usePollingPlugin = definePlugin(({ finished, refresh, options }) => {
       updateErrorCount()
     },
     onFinally() {
-      if (isStopPolling.value)
-        return resetErrorCount()
+      if (isStopPolling.value) return resetErrorCount()
 
       timer = setTimeout(refresh, pollingIntervalRef.value)
     },

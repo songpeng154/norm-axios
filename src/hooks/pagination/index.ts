@@ -1,7 +1,7 @@
 import type { PaginationAndFetchOptions, PaginationResponse, PaginationResult, PaginationServiceFn } from './types.ts'
 import { useEventListener } from '@vueuse/core'
 import { omit } from 'es-toolkit'
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { GLOBAL_CONFIG_PROVIDER_SYMBOL } from '../global'
 import { useRequest } from '../request'
 
@@ -54,8 +54,7 @@ export function usePagination<
       ]),
       onSuccess(data, params, response) {
         onSuccess?.(data, params, response)
-        if (!addedMode)
-          return
+        if (!addedMode) return
         // 数据追加
         list.value = (page.value <= lastPage.value ? data.list : [...list.value, ...data.list]) ?? []
         lastPage.value = page.value
@@ -70,24 +69,38 @@ export function usePagination<
   // 是否是最后一页
   const isLastPage = computed(() => page.value === totalPage.value)
 
+  const pageComputed = computed({
+    get() {
+      return page.value
+    },
+    set(value) {
+      page.value = value
+      pageWatch && fetchInstance.refresh()
+    },
+  })
+
+  const pageSizeComputed = computed({
+    get() {
+      return pageSize.value
+    },
+    set(value) {
+      pageSize.value = value
+      if (resetPageWhenPageSizeChange)
+        pageComputed.value = 1
+    },
+  })
   // 监听滚动到底部，滚动到底部分页自动+1
   useEventListener(target, 'scroll', (event) => {
     const { scrollHeight, scrollTop, clientHeight } = event.target as HTMLElement
     if (scrollTop + clientHeight >= scrollHeight - loadMoreOffset && !isLastPage.value && fetchInstance.finished.value)
-      page.value += 1
+      pageComputed.value += 1
   })
-
-  // 分页变化的时候刷新请求
-  pageWatch && watch(page, () => fetchInstance.refresh())
-
-  // 当分页数量变化的时候重置分页
-  resetPageWhenPageSizeChange && watch(pageSize, () => page.value = 1)
 
   return {
     ...fetchInstance,
     list: computed(() => addedMode ? list.value : fetchInstance.data.value?.list ?? []),
-    page,
-    pageSize,
+    page: pageComputed,
+    pageSize: pageSizeComputed,
     total,
     totalPage,
     isLastPage,

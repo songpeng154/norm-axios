@@ -138,12 +138,6 @@ export interface RequestOptions<
   pollingWhenDocumentHidden?: MaybeRef<boolean>
 
   /**
-   * 窗口失去焦点时进行轮询
-   * @default true
-   */
-  pollingWhenWindowBlur?: MaybeRef<boolean>
-
-  /**
    * 轮询错误重试次数。如果设置为 Infinity，则无限次
    * @default 3
    */
@@ -334,7 +328,7 @@ export interface RequestMethod<
    * 如果更新失败，则会还原到更新之前的数据
    * 不会更改 rawData 和 response 中的数据
    */
-  optimisticUpdate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData), params: TParams) => void
+  optimisticUpdate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData), params?: TParams) => void
 }
 
 export type RequestResult<

@@ -152,7 +152,7 @@ export default function useCoreRequest<
     const oldData = rawState.data
     mutate(newData)
     run(...params).catch(() => {
-      oldData && mutate(oldData)
+      if (oldData !== undefined) mutate(oldData)
     })
   }
 
