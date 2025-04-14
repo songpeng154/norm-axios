@@ -34,17 +34,17 @@
     "mitt": "^3.0.1"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.11.0",
+    "@antfu/eslint-config": "^4.12.0",
     "@rslib/core": "^0.5.5",
     "@testing-library/vue": "^8.1.0",
-    "@types/node": "^22.14.0",
+    "@types/node": "^22.14.1",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vitest/ui": "^3.1.1",
     "@vue/test-utils": "^2.4.6",
     "eslint": "^9.24.0",
     "esno": "^4.8.0",
     "happy-dom": "^17.4.4",
-    "lint-staged": "^15.5.0",
+    "lint-staged": "^15.5.1",
     "simple-git-hooks": "^2.12.1",
     "vitest": "^3.1.1",
     "vue-tsc": "^2.2.8"
