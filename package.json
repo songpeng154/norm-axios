@@ -1,7 +1,7 @@
 {
   "name": "norm-axios",
   "type": "module",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。",
   "license": "MIT",
   "author": {
