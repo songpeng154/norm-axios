@@ -34,7 +34,7 @@ export default defineConfig({
           root: './dist/cjs',
         },
       },
-      dts,
+      // dts,
     },
     {
       format: 'umd',
@@ -50,7 +50,7 @@ export default defineConfig({
           axios: 'axios',
         },
       },
-      dts,
+      // dts,
     },
   ],
 })
