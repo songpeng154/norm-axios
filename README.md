@@ -12,9 +12,6 @@
     <img src="https://img.shields.io/npm/dm/norm-axios.svg" />
   </a>
   <a href="https://www.npmjs.com/package/norm-axios">
-    <img src="https://img.shields.io/github/languages/top/songpeng154/norm-axios" alt="Languages" />
-  </a>
-  <a href="https://www.npmjs.com/package/norm-axios">
     <img src="https://img.shields.io/npm/l/norm-axios" alt="License" />
   </a>
 </p>
@@ -30,17 +27,17 @@ Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的�
 
 ## 特性
 
-* 🌐 统一多后端服务的数据结构
-* ⚡ 响应式数据
-* 🔄 轮询请求
-* ♻️ 自动处理错误重试
-* 💾 内存缓存策略
-* ⏳ 节流、防抖请求
-* 🔍 聚焦页面时自动重新请求
-* 📊 强大的分页钩子
-* ⚙️ 全局配置（包含插件）
-* 🟢 支持 Vue3
-* 📘 支持 TypeScript，具有强大的类型提示
+* 统一多后端服务的数据结构
+* 响应式数据
+* 轮询请求
+* 自动处理错误重试
+* 内存缓存策略
+* 节流、防抖请求
+* 聚焦页面时自动重新请求
+* 强大的分页钩子
+* 全局配置（包含插件）
+* 支持 Vue3
+* 支持 TypeScript，具有强大的类型提示
 
 ## 文档
 
