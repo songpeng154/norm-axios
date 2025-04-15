@@ -7,6 +7,7 @@ const packageJson = {
   name: PackageInfo.name,
   version: PackageInfo.version,
   description: PackageInfo.description,
+  type: 'module',
   main: 'cjs/index.cjs',
   module: 'esm/index.js',
   types: 'esm/index.d.ts',
