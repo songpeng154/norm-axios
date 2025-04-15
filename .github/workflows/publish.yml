@@ -1,36 +1,29 @@
-name: Publish to npm
+# .github/workflows/release.yml
+
+name: Release
+
+permissions:
+  contents: write
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*'
 
 jobs:
-  build-and-publish:
+  release:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Set node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org/'
+          registry-url: https://registry.npmjs.org/
+          node-version: lts/*
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build project
-        run: pnpm build
-
-      - name: Publish to npm
-        run: pnpm publish --no-git-checks
+      - run: npx changelogithub
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.NPM_TOKEN}}
