@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { BUNDLE_PATH } from './path.ts'
 
-const folders = ['cjs', 'esm', 'umd']
+const folders = ['esm']
 const injectContent = `
 declare module 'axios' {
   interface AxiosRequestConfig extends Partial<Meta> {}
