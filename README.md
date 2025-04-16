@@ -41,7 +41,8 @@ Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的�
 
 ## 文档
 
-[详细文档](https://songpeng154.github.io/norm-axios/)
+[地址1(Cloudflare)](https://norm-axios-press.pages.dev/document/use-request/basic-usage)
+[地址2(Github)](https://songpeng154.github.io/norm-axios-press/)
 
 ## 致谢
 
