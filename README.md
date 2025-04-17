@@ -16,7 +16,7 @@
   </a>
 </p>
 <p align="center">
-Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。
+Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API,仅支持 vue3，帮助你更高效的开发。
 </p>
 
 ## Norm Axios 解决了什么问题
@@ -36,7 +36,6 @@ Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的�
 * 聚焦页面时自动重新请求
 * 强大的分页钩子
 * 全局配置（包含插件）
-* 支持 Vue3
 * 支持 TypeScript，具有强大的类型提示
 
 ## 文档
