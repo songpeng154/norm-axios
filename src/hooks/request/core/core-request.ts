@@ -2,6 +2,7 @@ import type { ResponseContent } from '../../../norm-axios/types.ts'
 import type { RequestOptions, RequestServiceFn } from '../types.ts'
 import type useCoreState from './core-state.ts'
 import type usePlugins from './plugins.ts'
+import { undefined } from '@rspack/core/compiled/zod'
 import { isFunction } from 'es-toolkit'
 import { ref } from 'vue'
 import useDebounce from '../../debounce'
@@ -105,7 +106,7 @@ export default function useCoreRequest<
       // 如果格式化数据函数存在就使用格式化后的数据，不存在就使用原数据
       const finalData = (formatData ? formatData(result, args, res!) : result) as TFormatData
 
-      setState({ data: finalData })
+      setState({ data: finalData, error: undefined })
 
       onSuccess?.(finalData, args, res!)
       runPluginHooks('onSuccess', finalData, args, res!)
