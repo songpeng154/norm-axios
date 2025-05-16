@@ -45,7 +45,7 @@ export interface PaginationOptions {
    * 启用后会自动将新请求的数据追加到已有列表中，例如第一次请求返回 [1, 2, 3]，第二次返回 [4, 5, 6]，最终列表将合并为 [1, 2, 3, 4, 5, 6]。该功能常用于「加载更多」场景。
    * @default false
    */
-  addedMode?: boolean
+  addedMode?: MaybeRef<boolean>
 
   /**
    * 当 page 变化的时候自动调用服务

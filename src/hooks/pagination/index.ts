@@ -39,6 +39,8 @@ export function usePagination<
   const pageSize = ref(initialPageSize)
   // 上次分页
   const lastPage = ref(initialPage)
+  // 追加模式
+  const addedModeRef = ref(addedMode)
 
   // 列表数据
   const list = ref<TFormatData['list']>([] as TFormatData['list'])
@@ -54,7 +56,7 @@ export function usePagination<
       ]),
       onSuccess(data, params, response) {
         onSuccess?.(data, params, response)
-        if (!addedMode) return
+        if (!addedModeRef.value) return
         // 数据追加
         list.value = (page.value <= lastPage.value ? data.list : [...list.value, ...data.list]) ?? []
         lastPage.value = page.value
@@ -89,6 +91,7 @@ export function usePagination<
         pageComputed.value = 1
     },
   })
+
   // 监听滚动到底部，滚动到底部分页自动+1
   useEventListener(target, 'scroll', (event) => {
     const { scrollHeight, scrollTop, clientHeight } = event.target as HTMLElement
@@ -98,7 +101,7 @@ export function usePagination<
 
   return {
     ...fetchInstance,
-    list: computed(() => addedMode ? list.value : fetchInstance.data.value?.list ?? []),
+    list: computed(() => addedModeRef.value ? list.value : fetchInstance.data.value?.list ?? []),
     page: pageComputed,
     pageSize: pageSizeComputed,
     total,
