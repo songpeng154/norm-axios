@@ -1,4 +1,4 @@
-import { computed, ref, toRef } from 'vue'
+import { computed, onUnmounted, ref, toRef } from 'vue'
 import definePlugin from '../define-plugin.ts'
 
 const useErrorRetryPlugin = definePlugin(({ finished, options, refresh }) => {
@@ -25,6 +25,10 @@ const useErrorRetryPlugin = definePlugin(({ finished, options, refresh }) => {
     errorCount.value += 1
   }
 
+  onUnmounted(() => {
+    clearTimer()
+  })
+
   return {
     onBefore() {
       clearTimer()
@@ -33,8 +37,7 @@ const useErrorRetryPlugin = definePlugin(({ finished, options, refresh }) => {
       resetErrorCount()
     },
     onError() {
-      if (isStopRetry.value)
-        return resetErrorCount()
+      if (isStopRetry.value) return resetErrorCount()
 
       updateErrorCount()
       timer = setTimeout(refresh, retryIntervalRef.value)

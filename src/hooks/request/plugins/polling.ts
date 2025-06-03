@@ -1,5 +1,5 @@
 import { useDocumentVisibility } from '@vueuse/core'
-import { computed, ref, toRef, watch } from 'vue'
+import { computed, onUnmounted, ref, toRef, watch } from 'vue'
 import definePlugin from '../define-plugin.ts'
 
 const usePollingPlugin = definePlugin(({ finished, refresh, options }) => {
@@ -48,6 +48,10 @@ const usePollingPlugin = definePlugin(({ finished, refresh, options }) => {
     // 窗口可见时恢复轮询
     if (documentVisibility.value === 'visible' && !isStopPolling.value)
       refresh()
+  })
+
+  onUnmounted(() => {
+    clearTimer()
   })
 
   return {
