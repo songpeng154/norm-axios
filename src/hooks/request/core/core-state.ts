@@ -8,15 +8,11 @@ export default function useCoreState<
   TParams extends any[] = any[],
   // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
->(options: RequestOptions<TData, TParams, TFormatData, TRawData>) {
-  type State = RequestState<TData, TParams, TFormatData, TRawData>
+>(options: RequestOptions<TData, TParams, TFormatData>) {
+  type State = RequestState<TData, TParams, TFormatData>
 
   const state: State = {
     data: options.initialData,
-    rawData: undefined,
-    response: undefined,
     error: undefined,
     params: (options.defaultParams || []) as TParams,
     loading: false,
@@ -33,9 +29,7 @@ export default function useCoreState<
     loading: computed(() => stateReactive.loading),
     finished: computed(() => stateReactive.finished),
     data: computed(() => stateReactive.data),
-    rawData: computed(() => stateReactive.response?.data),
     error: computed(() => stateReactive.error),
-    response: computed(() => stateReactive.response),
     params: computed(() => stateReactive.params),
     setState,
     rawState: state,

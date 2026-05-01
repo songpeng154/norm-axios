@@ -1,6 +1,3 @@
-import NormAxios from './norm-axios/index'
-
 export * from './hooks/index'
-export * from './norm-axios/types'
-
-export { NormAxios }
+export type { ResponseError } from './types/response'
+export type { InferServiceData, InferServiceParams } from './hooks/request/types'

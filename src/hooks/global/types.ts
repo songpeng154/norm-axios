@@ -8,13 +8,11 @@ export interface GlobalConfigProvider<
   TParams extends any[] = any[],
   // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
 > {
   /**
    * 通用配置
    */
-  common?: RequestOptions<TData, TParams, TFormatData, TRawData>
+  common?: RequestOptions<TData, TParams, TFormatData>
 
   /**
    * 分页配置
@@ -24,5 +22,5 @@ export interface GlobalConfigProvider<
   /**
    * 插件
    */
-  plugins?: RequestPluginImplement<TData, TParams, TFormatData, TRawData>[]
+  plugins?: RequestPluginImplement<TData, TParams, TFormatData>[]
 }

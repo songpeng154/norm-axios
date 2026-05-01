@@ -1,0 +1,32 @@
+---
+outline: deep
+---
+
+# 数据突变
+
+在使用 `useRequest` 获取数据之后，某些场景中我们希望在不重新请求接口的前提下，直接修改已有的请求结果，比如新增、删除、更新一条数据。此时可以使用
+`mutate`，来手动更新`data`数据。
+
+```typescript
+const { data, mutate } = useRequest(fetchList);
+
+// 手动更新数据
+mutate([...data, newItem]);
+
+// 或使用函数形式更新
+mutate((prevData) => prevData.filter(item => item.id !== 100));
+```
+
+::: demo
+use-request/mutate
+https://play.vuejs.org/#eNqtVM1u00AQfpWROTSR6rhVW1UySdQCRYIDVKU3zMGxJ8429u6yP0mqKAdOnIALcIB3QByQEBKv04gbr8DsuvlpgXLhYnnn59tvZr7ZaXAoZWtkMYiDts4UkwY0GiuhTHnRSQKjk6CbcFZJoQyYc4kwhRPUUnCNdwU3yA3MoK9EBRtcqCpMJ0zojWXKFKzGE3xuUf8rUGF/GUGUyJXwjO4xkOpznh2OU2agUx+gUbGyZBopII+B26qHqgmdLnAcwzFhkK+hUItyhM5MVZ2yCoU1C+smrEE0m+62KIIfr79evHl/8eLl/N3n+atPCwYFmvvpEO+lJl1R8PdNEw5QBxHwel/i641q1zS7hPCUkLDFxbjR3ATLc+wzjvkzh5X6OlclN3a2traIHhC+sYpfvybhs1WnRmlpqV7Xy8Y+JdXWKeREnAq2hq6lJnfWptJYq40y2lGtA5o6HQxWsqQcOgG0czbyP/Qruw7y5/cP0xocZrN2JBdexqUlMmElcixJRp5WEngBOVXhxHhd+eCeNUZwOMhKlg3JW7Ns+JzmMgxg/vHL/O23xVx8alTn1uyiml47WiNNR23OSwSdCYm5k7Kn5qfWS7NhoQS1P6bGqUYYjmSYhb0i1KJvmrddjEzznPEihj05gW36eGtPqBxVqNKcWR3D7qW5SlXBeKhYMaDpb295s5/OZY2/XXtrD/dT7PnsTJRCxTAeMINrt5C6Ba8N/4UMDdh1hFoRbAb18oVVKltnWnB6BjzF5NJB2x/XpJ1ttbbOnAQDY6SOo8hyOSxamaiiVcSBG4A2EeoqYqTvCeEnweYC6kaUKwA5o4+3tCrGPYoDoUJmxN/QXHmfFdfYE4pkJarH0jDagCtVpGUpxg+9zSiLS0rZALPhH+xnelITPabFQzUiHS99hnqMJGXnPnryyMt66STx25Kib3DSAyFK6zjWYXdIFER7vVGO7QM/DJr8qT6a0M7rRVGOqO+Gj6c9s/Qq/L30Fd2d1u6yi7Nfoksa4w==
+:::
+
+## 乐观更新
+乐观更新是数据突变的一种特殊形式，通常用于用户操作后立即更新 UI，同时在后台发送请求修改数据，如果请求失败则回滚。
+
+
+::: demo
+use-request/optimistic-update
+https://play.vuejs.org/#eNqtVcGOG0UQ/ZXScFhbsj1eJRHSYJuEECQ4QBTCaWcPPTPl2Y5nupvuHq9Xlg/shUME4QAIOAQhAUIcWBaBFgSfgx1z4heo7vHa3iVZKVIudnd19atXr6prpsEtpTrjCoMo6JlUc2XBoK0UFEzk/TiwJg4GseClktqCPVIIU7iHRklh8LYUFoWFGQy1LGFHSF222YRLs7O+MoXK4D18v0LzDMdYpARmgZkjkd46ZNxCv95Ao+RFwQ2SQxaBqMoEdRP6AxB4CHcJis4aGo0sxujMRP0+L1FW9tzagi2IZtNFC0NYfnw2f/T5/IMPF5/9vPjop3MGOdo32AhfZ5ZtKCQRJFIWyATZhqww2IzOY/cuKdFbeQ4Gjs00FgDMJ7TJrXGt2+0SDwBNOmvhNZVDSKDf75MyPscdeBX2KpHhkAvMWiRiafIIduaPjonxk9M/548f/vPpl8uTk50WpDLDCK53uzDbhwj2khasr+7HYrZReAoZpdaCQrKMi7wFUllOeVievqfoCKlA/a16NbYEIRKOdMlExYrI6gpbbs8Ft5wVziOq1SHzjPLrhXU7UfPQxmKpCgpAO4Bexsd+QUs1WHxxMv/k+/nZL0+O/1j+9vjfv76a1jxhNuuFauO4Yl07rDYXfZLKWingZlrwdETNezm9hqcNe+5vv+kb290DoNB///4jRV8BhTXS8+LuPh20sfjhm8XDr5cnZ4vT4/m3p8tfv/MNcClQL6x16YVbatHW2KMCwaRSYeaeolAVldLdSFg6yrWkakcwZrrRbo9VO20nedvIoW2+4nwUy5xQEdxQE9ilH29NpM5QtzWJWBlqnpW5ZDrnoq15fmAj2O16s2+glQT/C/vSDXyZYeJvp7KQOoLDA25xKwo9XClqwwshQ53lFCEpglZQT5l2yVTngZGCxpinGK8OaHpFNWln24wdZ46DA2uVicKwEmqUd1JZhhuPm64AxoZoypDTc5oQfhz4nndQV6JcAMioUWpLp+TCozgQSmRG/C3VVQx5fok9oSheoH6HOo2e7oUsWFHIw7e8bf0M/Z0DTEdPsT8wk5roXZqJqMe4lYYljdHWx3fefRsntF4fljKrCvK+4pDmnywqx7F2e42agmhvC+XYvumLQZW/b+5MaFCa86QcUa+G948D+hLdviL1Dd1rnetrFWf/ASJcbzk=
+:::

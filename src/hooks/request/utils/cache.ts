@@ -1,5 +1,3 @@
-import type { AxiosResponse } from 'axios'
-
 export interface CachedData<
   // 数据
   TData = any,
@@ -7,17 +5,9 @@ export interface CachedData<
   TParams extends any[] = any[],
   // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
 > {
   // 数据
   data: TFormatData
-
-  // 原始数据
-  rawData: TRawData
-
-  // 响应体
-  response?: AxiosResponse<TRawData>
 
   // 入参
   params: TParams

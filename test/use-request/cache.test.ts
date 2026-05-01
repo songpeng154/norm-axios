@@ -1,85 +1,144 @@
-import { describe, expect } from 'vitest'
-import { useRequest } from '../../src'
-import { asyncAwait, mockParamsResponse, mockResponse, withSetup } from '../utils.ts'
+import { describe, expect, it } from 'vitest'
+import { clearCache, useRequest } from '../../src'
+import { asyncAwait, withSetup } from '../utils.ts'
 
-describe('useRequest -> cache', () => {
-  it('useRequest第一次初始化 data 是空的,默认请求完成后，data 有值，useRequest 第二次初始化的时候有值，两秒后更新 data 的值', async () => {
-    const server = mockResponse([Date.now()], 200)
-    const [{ data: data1 }] = withSetup(() => useRequest(server, {
-      cacheKey: 'cache',
-    }))
+describe('useRequest -> cache 模块测试', () => {
+  it('数据同步与缓存命中 (SWR)', async () => {
+    let callCount = 0
+    const mockService = async (id: number): Promise<string> => {
+      callCount++
+      await asyncAwait(50)
+      return `Data ${id}`
+    }
 
-    expect(data1.value).toBe(undefined)
+    const [{ data: data1 }] = withSetup(() =>
+      useRequest(mockService, {
+        defaultParams: [1],
+        cacheKey: 'test-sync-key',
+        staleTime: 200,
+      }),
+    )
 
-    await asyncAwait(200)
+    await asyncAwait(100)
+    expect(callCount).toBe(1)
+    expect(data1.value).toBe('Data 1')
 
-    expect(data1.value).toBeDefined()
+    // 再次发一个相同 cacheKey 的请求
+    const [{ data: data2, loading }] = withSetup(() =>
+      useRequest(mockService, {
+        defaultParams: [1],
+        cacheKey: 'test-sync-key',
+        staleTime: 200,
+      }),
+    )
 
-    const [{ data: data2 }] = withSetup(() => useRequest(server, {
-      cacheKey: 'cache',
-    }))
+    // 因为有了缓存，data 会立刻被赋予上一次的值
+    expect(data2.value).toBe('Data 1')
+    expect(callCount).toBe(1)
 
-    console.log(data2.value)
-    expect(data2.value).toBeDefined()
+    // 在 staleTime 内认为是新鲜的，不会再发出请求
+    await asyncAwait(100)
+    expect(callCount).toBe(1)
+    expect(loading.value).toBe(false)
   })
 
-  it('相同的 key 同时请求，它们会用同一个 Promise,返回结果一致', async () => {
-    const server = mockResponse([Date.now()], 200)
-    const [{ data: data1 }] = withSetup(() => useRequest(server, {
-      cacheKey: 'cache',
-    }))
+  it('相同 cacheKey 并发请求共享 Promise', async () => {
+    let callCount = 0
+    const mockService = async (): Promise<string> => {
+      callCount++
+      await asyncAwait(50)
+      return 'Result'
+    }
 
-    const [{ data: data2 }] = withSetup(() => useRequest(server, {
-      cacheKey: 'cache',
-    }))
+    const [{ data: data1 }] = withSetup(() =>
+      useRequest(mockService, { cacheKey: 'test-concurrent-key' }),
+    )
 
-    await asyncAwait(400)
-    console.log(data1.value)
-    console.log(data2.value)
-    expect(data1.value).toBe(data2.value)
+    const [{ data: data2 }] = withSetup(() =>
+      useRequest(mockService, { cacheKey: 'test-concurrent-key' }),
+    )
+
+    await asyncAwait(100)
+
+    expect(data1.value).toBe('Result')
+    expect(data2.value).toBe('Result')
+    // 两个实例，但底层只发一次请求
+    expect(callCount).toBe(1)
   })
 
-  it('同时请求共用一个 Promise', async () => {
-    const server = mockParamsResponse(200)
-    const [{ data: data1 }] = withSetup(() => useRequest(server, {
-      defaultParams: [1],
-      cacheKey: 'cache',
-    }))
+  it('使用 clearCache 清除缓存后会重新请求', async () => {
+    let callCount = 0
+    const mockService = async (): Promise<string> => {
+      callCount++
+      await asyncAwait(50)
+      return 'Result'
+    }
 
-    const [{ data: data2 }] = withSetup(() => useRequest(server, {
-      defaultParams: [2],
-      cacheKey: 'cache',
-    }))
+    const [{ data: data1 }] = withSetup(() =>
+      useRequest(mockService, { cacheKey: 'test-clear-key', staleTime: 1000 }),
+    )
+    await asyncAwait(100)
+    expect(callCount).toBe(1)
+    expect(data1.value).toBe('Result')
 
-    await asyncAwait(400)
+    // 清除该缓存
+    clearCache('test-clear-key')
 
-    expect(data1.value).toBe(data2.value)
+    const [{ data: data2 }] = withSetup(() =>
+      useRequest(mockService, { cacheKey: 'test-clear-key', staleTime: 1000 }),
+    )
+
+    // 缓存已清除，初始应该是 undefined
+    expect(data2.value).toBeUndefined()
+
+    await asyncAwait(100)
+    expect(callCount).toBe(2)
+    expect(data2.value).toBe('Result')
   })
 
-  it('数据同步', async () => {
-    const server = mockParamsResponse(200)
-    const [{ data: data1, run }] = withSetup(() => useRequest(server, {
-      defaultParams: [1],
-      cacheKey: 'cache',
-    }))
+  it('多实例数据共享与更新同步', async () => {
+    let callCount = 0
+    const mockService = async (val: string): Promise<string> => {
+      callCount++
+      await asyncAwait(50)
+      return val
+    }
 
-    const [{ data: data2 }] = withSetup(() => useRequest(server, {
-      defaultParams: [2],
-      cacheKey: 'cache',
-    }))
+    const [{ data: data1, run }] = withSetup(() =>
+      useRequest(mockService, { cacheKey: 'test-sync-update-key', manual: true }),
+    )
 
-    const [{ data: data3 }] = withSetup(() => useRequest(server, {
-      defaultParams: [3],
-      cacheKey: 'cache',
-    }))
+    await run('Apple')
+    expect(data1.value).toBe('Apple')
+    expect(callCount).toBe(1)
 
-    await asyncAwait(400)
+    // 第二个实例从缓存直接读取
+    const [{ data: data2 }] = withSetup(() =>
+      useRequest(mockService, { cacheKey: 'test-sync-update-key' }),
+    )
+    expect(data2.value).toBe('Apple')
+  })
 
-    expect(data1.value).toBe(data2.value)
+  it('缓存错误后不缓存结果', async () => {
+    let callCount = 0
+    const mockService = async (): Promise<string> => {
+      callCount++
+      if (callCount === 1)
+        throw new Error('first call failed')
+      return 'Success'
+    }
 
-    run(2)
-    await asyncAwait(400)
-    expect(data1.value).toBe(data2.value)
-    console.log(data3.value)
+    const [{ data, error, run }] = withSetup(() =>
+      useRequest(mockService, { cacheKey: 'test-error-no-cache', manual: true }),
+    )
+
+    await run().catch(() => {})
+    expect(error.value).toBeInstanceOf(Error)
+    expect(data.value).toBeUndefined()
+
+    // 第二次应该重新请求（不会使用错误的缓存）
+    await run()
+    expect(data.value).toBe('Success')
+    expect(callCount).toBe(2)
   })
 })

@@ -1,4 +1,3 @@
-import type { ResponseContent } from '../../../norm-axios/types.ts'
 import type { CachedData } from '../utils/cache.ts'
 import { omit } from 'es-toolkit'
 import { ref } from 'vue'
@@ -19,7 +18,7 @@ const useCachePlugin = definePlugin(({ options, setState, params }) => {
 
   const isSelfEmit = ref(false)
   const isUpdate = ref(true)
-  let currentServicePromise: Promise<ResponseContent>
+  let currentServicePromise: Promise<any>
 
   // 是否新鲜的
   const isFresh = (time: number) => staleTime === Infinity || time + staleTime > Date.now()
@@ -70,12 +69,10 @@ const useCachePlugin = definePlugin(({ options, setState, params }) => {
       setCachePromise(cacheKey, servicePromise)
       return { servicePromise }
     },
-    onSuccess(data, params, response) {
+    onSuccess(data, params) {
       _setCache(cacheKey, {
         data,
         params: params as [],
-        rawData: response?.data,
-        response,
         time: Date.now(),
       })
       const newCache = _getCache(cacheKey)

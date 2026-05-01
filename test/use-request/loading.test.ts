@@ -1,122 +1,92 @@
-import { describe } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { useRequest } from '../../src'
-import { asyncAwait, mockResponse, withSetup } from '../utils.ts'
+import { asyncAwait, withSetup } from '../utils.ts'
 
-describe('useRequest -> loading 模块', () => {
-  it('如果服务 300毫秒 以内返回，那么 loading 就不会为 true ', async () => {
-    const server = mockResponse([Date.now()], 200)
-    const [{ loading }] = withSetup(() => useRequest(server, {
-      loadingDelay: 300,
-    }))
-    // 初始状态，loading 应该是 false
+describe('useRequest -> loading 模块测试', () => {
+  it('如果服务在 loadingDelay 内返回，loading 始终为 false', async () => {
+    const fastService = async (): Promise<string> => {
+      await asyncAwait(100)
+      return 'ok'
+    }
+
+    const [{ loading }] = withSetup(() =>
+      useRequest(fastService, {
+        loadingDelay: 200,
+      }),
+    )
+
     expect(loading.value).toBe(false)
-
-    // 等待 200ms，loading 仍然应该是 false
-    await asyncAwait(200)
+    await asyncAwait(50)
     expect(loading.value).toBe(false)
-
-    // 等待 200ms，loading 仍然应该是 false
-    await asyncAwait(200)
-    expect(loading.value).toBe(false)
-
-    await asyncAwait(200)
-    expect(loading.value).toBe(false)
-  })
-
-  it('如果服务返回时间大于 300ms，那么 loading 在请求时间小于 300ms 的为 false,大于 300ms 为 true ,请求完成后 loading 为 false', async () => {
-    const server = mockResponse([Date.now()], 400)
-    const [{ loading }] = withSetup(() => useRequest(server, {
-      loadingDelay: 300,
-    }))
-    // 初始状态，loading 应该是 false
-    expect(loading.value).toBe(false)
-
-    // 等待 200ms，loading 仍然应该是 false
-    await asyncAwait(200)
-    expect(loading.value).toBe(false)
-
-    // 等待 100ms，loading 仍然应该是 true, 200 + 100 = 延迟 loading
-    await asyncAwait(100)
-    expect(loading.value).toBe(true)
-
-    // 等待 100ms，loading 仍然应该是 false， 200 + 100 + 100 = 接口请求完成
-    await asyncAwait(100)
-    expect(loading.value).toBe(false)
-  })
-
-  it('loading 会在 500ms 之前是 true', async () => {
-    const server = mockResponse([Date.now()], 400)
-    const [{ loading }] = withSetup(() => useRequest(server, {
-      loadingKeep: 500,
-    }))
-
-    await asyncAwait(0)
-
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(200)
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(100)
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(100)
-    expect(loading.value).toBe(true)
 
     await asyncAwait(100)
     expect(loading.value).toBe(false)
   })
 
-  it('loading 会在 700ms 之前是 true', async () => {
-    const server = mockResponse([Date.now()], 700)
-    const [{ loading }] = withSetup(() => useRequest(server, {
-      loadingKeep: 500,
-    }))
+  it('如果服务耗时大于 loadingDelay，loading 会在延迟后变为 true', async () => {
+    const slowService = async (): Promise<string> => {
+      await asyncAwait(300)
+      return 'ok'
+    }
 
-    await asyncAwait(0)
+    const [{ loading }] = withSetup(() =>
+      useRequest(slowService, {
+        loadingDelay: 100,
+      }),
+    )
 
+    expect(loading.value).toBe(false)
+
+    await asyncAwait(150)
     expect(loading.value).toBe(true)
 
     await asyncAwait(200)
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(100)
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(100)
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(100)
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(100)
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(100)
     expect(loading.value).toBe(false)
   })
 
-  it('loading 会在 700ms 之前是 true 2', async () => {
-    const server = mockResponse([Date.now()], 400)
-    const [{ loading }] = withSetup(() => useRequest(server, {
-      loadingKeep: 500,
-      loadingDelay: 300,
-    }))
+  it('使用 loadingKeep 保证 loading 至少显示指定时长 (防闪烁)', async () => {
+    const veryFastService = async (): Promise<string> => {
+      await asyncAwait(50)
+      return 'ok'
+    }
 
-    await asyncAwait(0)
+    const [{ loading }] = withSetup(() =>
+      useRequest(veryFastService, {
+        loadingKeep: 300,
+      }),
+    )
+
+    expect(loading.value).toBe(true)
+
+    await asyncAwait(100)
+    expect(loading.value).toBe(true)
+
+    await asyncAwait(250)
+    expect(loading.value).toBe(false)
+  })
+
+  it('loadingDelay 和 loadingKeep 组合使用', async () => {
+    const service = async (): Promise<string> => {
+      await asyncAwait(200)
+      return 'ok'
+    }
+
+    const [{ loading }] = withSetup(() =>
+      useRequest(service, {
+        loadingDelay: 100,
+        loadingKeep: 300,
+      }),
+    )
 
     expect(loading.value).toBe(false)
+
+    await asyncAwait(150)
+    expect(loading.value).toBe(true)
+
+    await asyncAwait(100)
+    expect(loading.value).toBe(true)
 
     await asyncAwait(200)
-    expect(loading.value).toBe(false)
-
-    await asyncAwait(100)
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(100)
-    expect(loading.value).toBe(true)
-
-    await asyncAwait(100)
     expect(loading.value).toBe(false)
   })
 })

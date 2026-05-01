@@ -1,32 +1,18 @@
 import type { ComputedRef, MaybeRef, Ref, ShallowRef } from 'vue'
-import type { ResponseContent } from '../../norm-axios/types.ts'
 import type { RequestOptions, RequestResult } from '../request/types.ts'
 
-export interface PaginationResponse<TResponse = any> {
-  list: TResponse[]
-
-  total: number
-}
-
-export type PaginationServiceFn<
-  // 数据
-  TData extends PaginationResponse = PaginationResponse,
-  // 原始数据
-  TRawData = any,
-> = (pagination: { page: number, pageSize: number }) => Promise<ResponseContent<TData, TRawData>>
-
+// ─── 分页专属配置（可用于全局，使用 any 以兼容任意数据结构）────────────────
 export interface PaginationOptions {
   /**
-   * 父级容器，如果存在，则在滚动到底部时，分页自动+1,然后加载数据
-   * 避免重复触发，请求期间不会触发滚动到底部的事件
+   * 滚动加载的容器，设置后在容器滚动到底部时自动将 page + 1
    */
-  target?: MaybeRef<HTMLElement> | ShallowRef<HTMLElement | null>
+  scrollTarget?: MaybeRef<HTMLElement> | ShallowRef<HTMLElement | null>
 
   /**
-   * 加载更多偏移量
+   * 触发滚动加载的距底部距离阈值（px）
    * @default 100
    */
-  loadMoreOffset?: number
+  scrollOffset?: number
 
   /**
    * 初始页码
@@ -35,84 +21,106 @@ export interface PaginationOptions {
   initialPage?: number
 
   /**
-   * 初始每页数据条数
+   * 初始每页条数
    * @default 10
    */
   initialPageSize?: number
 
   /**
-   * 追加模式
-   * 启用后会自动将新请求的数据追加到已有列表中，例如第一次请求返回 [1, 2, 3]，第二次返回 [4, 5, 6]，最终列表将合并为 [1, 2, 3, 4, 5, 6]。该功能常用于「加载更多」场景。
+   * 追加模式（「加载更多」场景）
+   * 开启后每次新数据会追加到现有列表末尾，而不是替换
    * @default false
    */
-  addedMode?: MaybeRef<boolean>
+  appendMode?: MaybeRef<boolean>
 
   /**
-   * 当 page 变化的时候自动调用服务
-   * 当 pageWatch 与 watchSource 同时设置为 true 后，page 或者 pageSize变化的时候会调用两遍服务，这个问题可以设置 pageWatch 或者 watchSource来解决
+   * 当 pageSize 变化时是否重置 page 到第一页
    * @default true
    */
-  pageWatch?: boolean
+  resetOnPageSizeChange?: boolean
 
   /**
-   * 当 pageSize 变化的时候重置 page
-   * @default true
+   * 自定义分页参数的序列化方式
+   * 用于适配后端不同的字段名
+   * 推荐在 useGlobalConfigProvider 中统一配置，无需每次传入
+   * @default (page, pageSize) => ({ page, pageSize })
+   * @example
+   * // MyBatis-Plus 风格
+   * paginationSerializer: (page, pageSize) => ({ current: page, size: pageSize })
    */
-  resetPageWhenPageSizeChange?: boolean
+  paginationSerializer?: (page: number, pageSize: number) => Record<string, any>
+
+  /**
+   * 从 service 返回的数据中提取列表和总条数
+   * 推荐在 useGlobalConfigProvider 中统一配置一次，无需每次传入
+   *
+   * @default (data) => ({ list: data?.list ?? [], total: data?.total ?? 0 })
+   *
+   * @example
+   * // 在 App.vue 全局配置一次
+   * useGlobalConfigProvider({
+   *   pagination: {
+   *     dataSerializer: (data) => ({ list: data.records, total: data.totalCount })
+   *   }
+   * })
+   */
+  dataSerializer?: (data: any) => { list: any[], total: number }
 }
 
+/**
+ * usePagination 局部调用的完整配置
+ * 在这里覆盖 dataSerializer 签名以提供精确的类型推导
+ *
+ * TData  — service resolve 的原始数据类型
+ * TParams — service 的参数类型
+ * TItem  — 列表项类型，从 dataSerializer 的返回值中自动推导
+ */
 export type PaginationAndFetchOptions<
-  // 数据
-  TData extends PaginationResponse = PaginationResponse,
-  // 方法参数
+  TData = any,
   TParams extends any[] = any[],
-  // 格式化数据
-  TFormatData extends PaginationResponse = TData,
-  // 原始数据
-  TRawData = any,
-> =
-  PaginationOptions &
-  RequestOptions<TData, TParams, TFormatData, TRawData>
+  TItem = any,
+> = Omit<PaginationOptions, 'dataSerializer'> &
+  Omit<RequestOptions<TData, TParams>, 'defaultParams' | 'formatData'> & {
+    defaultParams?: TParams
+    /**
+     * 从 service 数据中提取 list 和 total
+     * 局部配置时可精确推导 TItem 类型
+     */
+    dataSerializer?: (data: TData) => { list: TItem[], total: number }
+  }
 
 export interface PaginationResult<
-  // 数据
-  TData extends PaginationResponse = PaginationResponse,
-  // 方法参数
+  TData = any,
   TParams extends any[] = any[],
-  // 格式化数据
-  TFormatData extends PaginationResponse = TData,
-  // 原始数据
-  TRawData = any,
-> extends RequestResult<TData, TParams, TFormatData, TRawData> {
+  TItem = any,
+> extends Omit<RequestResult<TData, TParams>, 'run'> {
   /**
-   * 列表数据
+   * 手动触发分页请求（当 manual: true 时使用）
+   * 自动注入当前 page/pageSize，返回 Promise 支持 await
    */
-  list: ComputedRef<TFormatData['list']>
+  run: () => Promise<void>
 
-  /**
-   * 当前分页
-   * @default 1
-   */
+  /** 当前列表数据 */
+  list: ComputedRef<TItem[]>
+
+  /** 当前页码（可写） */
   page: Ref<number>
 
-  /**
-   * 分页数量
-   * @default 10
-   */
+  /** 每页条数（可写） */
   pageSize: Ref<number>
 
-  /**
-   * 数据总数
-   */
+  /** 数据总条数 */
   total: ComputedRef<number>
 
-  /**
-   * 分页总数
-   */
+  /** 总页数 */
   totalPage: ComputedRef<number>
 
-  /**
-   * 是否是最后一页
-   */
+  /** 是否已是最后一页 */
   isLastPage: ComputedRef<boolean>
+
+  /** 是否还有更多数据 */
+  hasMore: ComputedRef<boolean>
+
+  /** 加载下一页 */
+  loadMore: () => void
 }

@@ -24,13 +24,11 @@ export function useRequest<
   TParams extends any[] = any[],
   // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
 >(
-  service: RequestServiceFn<TData, TParams, TRawData>,
-  options: RequestOptions<TData, TParams, TFormatData, TRawData> = {},
-  plugins: RequestPluginImplement<TData, TParams, TFormatData, TRawData>[] = [],
-): RequestResult<TData, TParams, TFormatData, TRawData> {
+  service: RequestServiceFn<TData, TParams>,
+  options: RequestOptions<TData, TParams, TFormatData> = {},
+  plugins: RequestPluginImplement<TData, TParams, TFormatData>[] = [],
+): RequestResult<TData, TParams, TFormatData> {
   const scope = effectScope()
 
   const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL, {})
@@ -44,15 +42,15 @@ export function useRequest<
     usePollingPlugin,
     useErrorRetryPlugin,
     ...(globalProvider?.plugins || []),
-  ] as RequestPluginImplement<TData, TParams, TFormatData, TRawData>[]
+  ] as RequestPluginImplement<TData, TParams, TFormatData>[]
 
   const config = Object.assign(options, globalProvider?.common)
 
-  const { register, runPluginHooks } = usePlugins<TData, TParams, TFormatData, TRawData>(allPlugins)
-  const coreState = useCoreState<TData, TParams, TFormatData, TRawData>(config)
-  const coreRequest = useCoreRequest<TData, TParams, TFormatData, TRawData>(coreState, service, config, runPluginHooks)
+  const { register, runPluginHooks } = usePlugins<TData, TParams, TFormatData>(allPlugins)
+  const coreState = useCoreState<TData, TParams, TFormatData>(config)
+  const coreRequest = useCoreRequest<TData, TParams, TFormatData>(coreState, service, config, runPluginHooks)
 
-  const context: RequestContext<TData, TParams, TFormatData, TRawData> = {
+  const context: RequestContext<TData, TParams, TFormatData> = {
     ...coreState,
     ...coreRequest,
     scope,
@@ -67,19 +65,19 @@ export function useRequest<
 
   // 首次默认调用
   if (!config.manual && config.watchSource !== true)
-    void coreRequest.run(...coreState.rawState.params)
+    void coreRequest.run(...coreState.rawState.params).catch(() => {})
 
   scope.run(() => {
     // 依赖自动收集
     config.watchSource === true && watchEffect(() => {
-      void coreRequest.run(...coreState.rawState.params)
+      void coreRequest.run(...coreState.rawState.params).catch(() => {})
     })
 
     // 手动收集依赖
     !isBoolean(config.watchSource) && config.watchSource && watch(
       config.watchSource,
       () => {
-        void coreRequest.run(...coreState.rawState.params)
+        void coreRequest.run(...coreState.rawState.params).catch(() => {})
       },
       {
         deep: config.watchDeep,

@@ -58,6 +58,9 @@ const usePollingPlugin = definePlugin(({ finished, refresh, options }) => {
     onBefore() {
       clearTimer()
     },
+    onCancel() {
+      clearTimer()
+    },
     onSuccess() {
       resetErrorCount()
     },

@@ -1,18 +1,16 @@
-import type { AxiosResponse } from 'axios'
 import type { DebouncedFunction } from 'es-toolkit/dist/compat/function/debounce'
 import type { EffectScope, MaybeRef, Ref, WatchSource } from 'vue'
-import type { ResponseContent, ResponseError } from '../../norm-axios/types.ts'
 import type { Undefinable, WrapWithComputed } from '../../types/utils.ts'
 import type { CachedData } from './utils/cache.ts'
 
+/**
+ * service 函数类型
+ * 直接返回 TData，出错抛异常（throw / reject）
+ */
 export type RequestServiceFn<
-  // 数据
   TData = any,
-  // 方法参数
   TParams extends any[] = any[],
-  // 原始数据
-  TRawData = any,
-> = (...args: TParams) => Promise<ResponseContent<TData, TRawData>>
+> = (...args: TParams) => Promise<TData>
 
 // 请求配置项
 export interface RequestOptions<
@@ -22,8 +20,6 @@ export interface RequestOptions<
   TParams extends any[] = any[],
   // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
 > {
   /**
    * data 初始的数据
@@ -174,17 +170,18 @@ export interface RequestOptions<
   /**
    * 获取自定义缓存
    */
-  getCache?: (cacheKey: string, params: TParams) => CachedData<TData, TParams, TFormatData, TRawData>
+  getCache?: (cacheKey: string, params: TParams) => CachedData<TData, TParams, TFormatData>
 
   /**
    * 设置自定义缓存
    */
-  setCache?: (cacheKey: string, cacheData: CachedData<TData, TParams, TFormatData, TRawData>) => void
+  setCache?: (cacheKey: string, cacheData: CachedData<TData, TParams, TFormatData>) => void
 
   /**
    * 格式化数据
+   * service resolve 后，对原始数据做二次处理
    */
-  formatData?: (data: TData, params: TParams, response?: AxiosResponse<TRawData>) => TFormatData
+  formatData?: (data: TData, params: TParams) => TFormatData
 
   /**
    * 请求之前执行
@@ -193,31 +190,27 @@ export interface RequestOptions<
   onBefore?: (params: TParams) => void
 
   /**
-   * promise resolve 的时候执行
+   * 请求成功时执行
    * @param data 响应数据
    * @param params 请求参数
-   * @param response  axios响应内容
    */
   onSuccess?: (
     data: TFormatData,
     params: TParams,
-    response?: AxiosResponse<TRawData>,
   ) => void
 
   /**
-   * 请求错误的时候执行
+   * 请求错误的时候执行（service throw / reject 时触发）
    * @param error 错误信息
    * @param params 请求参数
-   * @param response  axios响应内容
    */
   onError?: (
-    error: ResponseError,
+    error: any,
     params: TParams,
-    response?: AxiosResponse<TRawData>,
   ) => void
 
   /**
-   * 最后执行,不管 service 成功失败都会执行
+   * 最后执行，不管 service 成功失败都会执行
    * @param params 参数
    */
   onFinally?: (params: TParams) => void
@@ -236,28 +229,16 @@ export interface RequestState<
   TParams extends any[] = any[],
   // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
 > {
   /**
-   * service 返回的数据 ｜ 格式化后的数据
+   * service resolve 的数据（经过 formatData 处理后）
    */
   data: Undefinable<TFormatData>
 
   /**
-   * service 返回的原始数据，取自 response.data
+   * service reject/throw 的错误
    */
-  rawData: Undefinable<TRawData>
-
-  /**
-   * service 返回的错误
-   */
-  error: Undefinable<ResponseError>
-
-  /**
-   * axios 原始响应内容
-   */
-  response: Undefinable<AxiosResponse<TRawData>>
+  error: Undefinable<any>
 
   /**
    * service 是否正在执行
@@ -270,7 +251,7 @@ export interface RequestState<
   finished: boolean
 
   /**
-   * 当次执行的 service 的参数数组。比如你触发了 run(1, 2, 3)，则 params 等于 [1, 2, 3]
+   * 当次执行的 service 的参数数组
    */
   params: TParams
 }
@@ -284,22 +265,19 @@ export interface RequestMethod<
   TFormatData = TData,
 > {
   /**
-   * 手动触发 service 执行，参数会传递给 service。异常自动处理，通过 onError 反馈或者使用run.catch() 进行反馈
-   * @param args 请求参数
+   * 手动触发 service 执行。异常通过 onError 反馈，或者 await run(...).catch() 捕获
    */
   run: (...args: TParams) => Promise<Undefinable<TFormatData>>
 
   /**
-   * 与 run 用法一致，加了防抖功能
-   * @param args 请求参数
+   * 与 run 用法一致，带防抖
    */
   debounceRun: DebouncedFunction<
     (...args: TParams) => Promise<Undefinable<TFormatData>>
   >
 
   /**
-   * 与 run 用法一致，加了节流功能
-   * @param args 请求参数
+   * 与 run 用法一致，带节流
    */
   throttleRun: DebouncedFunction<
     (...args: TParams) => Promise<Undefinable<TFormatData>>
@@ -311,47 +289,33 @@ export interface RequestMethod<
   refresh: () => Promise<Undefinable<TFormatData>>
 
   /**
-   * 手动取消当前正在进行中的请求
-   * 不是真正的取消请求，已发出的请求后台还是会接受到的
-   * 该方法只是取消了 data、response 的赋值以及 loading 重置为 false
+   * 手动取消当前正在进行中的请求（伪取消）
    */
   cancel: () => void
 
   /**
    * 突变，立即更改 data 数据
-   * 不会更改 rawData 和 response 中的数据
    */
   mutate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData)) => void
 
   /**
-   * 乐观更新,立即更改 data 数据，并且自动在背后发起请求
-   * 如果更新失败，则会还原到更新之前的数据
-   * 不会更改 rawData 和 response 中的数据
+   * 乐观更新，立即更改 data 数据并在背后发起请求
+   * 如果请求失败，自动还原到更新之前的数据
    */
   optimisticUpdate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData), params?: TParams) => void
 }
 
 export type RequestResult<
-  // 数据
   TData = any,
-  // 方法参数
   TParams extends any[] = any[],
-  // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
-> = WrapWithComputed<RequestState<TData, TParams, TFormatData, TRawData>> &
-  RequestMethod<TData, TParams, TFormatData>
+> = WrapWithComputed<RequestState<TData, TParams, TFormatData>>
+  & RequestMethod<TData, TParams, TFormatData>
 
 export interface RequestPluginHooks<
-  // 数据
   TData = any,
-  // 方法参数
   TParams extends any[] = any[],
-  // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
 > {
   /**
    * 请求之前触发
@@ -361,19 +325,18 @@ export interface RequestPluginHooks<
   } | void
 
   /**
-   * 请求开始时触发
+   * 请求开始时触发（可拦截并替换 servicePromise）
    */
-  onRequest?: (service: (...params: TParams) => Promise<ResponseContent<TData, TRawData>>, params: TParams) => {
-    servicePromise: Promise<ResponseContent<TData, TRawData>>
+  onRequest?: (service: (...params: TParams) => Promise<TData>, params: TParams) => {
+    servicePromise: Promise<TData>
   }
 
   /**
    * 请求失败时触发
    */
   onError?: (
-    error: ResponseError,
+    error: any,
     params: TParams,
-    response?: AxiosResponse<TRawData>,
   ) => void
 
   /**
@@ -382,7 +345,6 @@ export interface RequestPluginHooks<
   onSuccess?: (
     data: TFormatData,
     params: TParams,
-    response?: AxiosResponse<TRawData>,
   ) => void
 
   /**
@@ -391,7 +353,7 @@ export interface RequestPluginHooks<
   onFinallyFetchDone?: (params: TParams) => void
 
   /**
-   * 最后执行，不管 server 成功还是失败都会执行
+   * 最后执行，不管 service 成功还是失败都会执行
    */
   onFinally?: (params: TParams) => void
 
@@ -407,41 +369,39 @@ export interface RequestPluginHooks<
 }
 
 export interface RequestContext<
-  // 数据
   TData = any,
-  // 方法参数
   TParams extends any[] = any[],
-  // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
-> extends RequestResult<TData, TParams, TFormatData, TRawData> {
+> extends RequestResult<TData, TParams, TFormatData> {
   // 当前作用域
   scope: EffectScope
 
   // 配置项
-  options: RequestOptions<TData, TParams, TFormatData, TRawData>
+  options: RequestOptions<TData, TParams, TFormatData>
 
   // 原始 state
-  rawState: RequestState<TData, TParams, TFormatData, TRawData>
+  rawState: RequestState<TData, TParams, TFormatData>
 
   // 设置状态
   setState: (
-    state: Partial<RequestState<TData, TParams, TFormatData, TRawData>>,
+    state: Partial<RequestState<TData, TParams, TFormatData>>,
   ) => void
 }
 
 export interface RequestPluginImplement<
-  // 数据
   TData = any,
-  // 方法参数
   TParams extends any[] = any[],
-  // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
 > {
   (
-    context: RequestContext<TData, TParams, TFormatData, TRawData>,
-  ): RequestPluginHooks<TData, TParams, TFormatData, TRawData> | void
+    context: RequestContext<TData, TParams, TFormatData>,
+  ): RequestPluginHooks<TData, TParams, TFormatData> | void
 }
+
+// 工具：从 RequestServiceFn 推导 TData
+export type InferServiceData<T extends RequestServiceFn<any, any>> =
+  T extends RequestServiceFn<infer D, any> ? D : never
+
+// 工具：从 RequestServiceFn 推导 TParams
+export type InferServiceParams<T extends RequestServiceFn<any, any>> =
+  T extends RequestServiceFn<any, infer P> ? P : never

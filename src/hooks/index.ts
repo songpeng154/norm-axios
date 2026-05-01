@@ -6,6 +6,7 @@ export * from './debounce/index'
 export * from './global/index'
 export * from './global/types'
 
+export * from './pagination/create-pagination'
 export * from './pagination/index'
 export * from './pagination/types'
 

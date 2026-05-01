@@ -11,8 +11,6 @@ export function useGlobalConfigProvider<
   TParams extends any[] = any[],
   // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
->(config: GlobalConfigProvider<TData, TParams, TFormatData, TRawData>) {
+>(config: GlobalConfigProvider<TData, TParams, TFormatData>) {
   provide(GLOBAL_CONFIG_PROVIDER_SYMBOL, config)
 }

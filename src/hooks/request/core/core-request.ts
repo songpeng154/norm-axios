@@ -1,4 +1,3 @@
-import type { ResponseContent } from '../../../norm-axios/types.ts'
 import type { RequestOptions, RequestServiceFn } from '../types.ts'
 import type useCoreState from './core-state.ts'
 import type usePlugins from './plugins.ts'
@@ -8,23 +7,18 @@ import useDebounce from '../../debounce'
 import useThrottle from '../../throttle'
 
 export default function useCoreRequest<
-  // 数据
   TData = any,
-  // 方法参数
   TParams extends any[] = any[],
-  // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
 >(
   {
     setState,
     rawState,
     data,
-  }: ReturnType<typeof useCoreState<TData, TParams, TFormatData, TRawData>>,
-  service: RequestServiceFn<TData, TParams, TRawData>,
-  options: RequestOptions<TData, TParams, TFormatData, TRawData> = {},
-  runPluginHooks: ReturnType<typeof usePlugins<TData, TParams, TFormatData, TRawData>>['runPluginHooks'],
+  }: ReturnType<typeof useCoreState<TData, TParams, TFormatData>>,
+  service: RequestServiceFn<TData, TParams>,
+  options: RequestOptions<TData, TParams, TFormatData> = {},
+  runPluginHooks: ReturnType<typeof usePlugins<TData, TParams, TFormatData>>['runPluginHooks'],
 ) {
   const {
     ready = ref(true),
@@ -52,7 +46,7 @@ export default function useCoreRequest<
     }, 0)
     const beforeReturn = runPluginHooks('onBefore', args)
 
-    if (beforeReturn?.isReturned) {
+    if (beforeReturn && beforeReturn.isReturned) {
       setState({ loading: false, finished: true })
       return
     }
@@ -66,15 +60,14 @@ export default function useCoreRequest<
     })
 
     try {
-      const serviceWrapper = (...params: TParams) => new Promise<ResponseContent<TData, TRawData>>(resolve => resolve(service(...params)))
+      // service 直接返回 Promise<TData>，出错就 throw/reject
+      const serviceWrapper = (...params: TParams): Promise<TData> => {
+        return service(...params)
+      }
+
       const { servicePromise } = runPluginHooks('onRequest', serviceWrapper, args)
+      const result = await (servicePromise || serviceWrapper(...args))
 
-      const content = await (servicePromise || serviceWrapper(...args))
-
-      if (!(Array.isArray(content)))
-        return Promise.reject(new TypeError('server 请返回正确的 ResponseContent 类型格式'))
-
-      const [result, err, res] = content
       // 当连续请求的时候，最后一个服务请求完之后
       if (currentCount === count) {
         setState({ finished: true })
@@ -84,35 +77,32 @@ export default function useCoreRequest<
 
       // 取消请求
       if (isCancelled) {
-        if (currentCount === count) isCancelled = false
+        if (currentCount === count)
+          isCancelled = false
         return data.value
       }
 
-      setState({
-        response: res,
-      })
-
-      // 处理错误
-      if (err) {
-        setState({
-          error: err,
-        })
-        onError?.(err, args, res!)
-        runPluginHooks('onError', err, args, res!)
-        return Promise.reject(err)
-      }
-
-      // 如果格式化数据函数存在就使用格式化后的数据，不存在就使用原数据
-      const finalData = (formatData ? formatData(result, args, res!) : result) as TFormatData
+      // 格式化数据
+      const finalData = (formatData ? formatData(result, args) : result) as TFormatData
 
       setState({ data: finalData, error: undefined })
-
-      onSuccess?.(finalData, args, res!)
-      runPluginHooks('onSuccess', finalData, args, res!)
+      onSuccess?.(finalData, args)
+      runPluginHooks('onSuccess', finalData, args)
 
       return finalData
     }
     catch (e) {
+      // service throw 或 reject 时落到这里
+      if (isCancelled) {
+        if (currentCount === count)
+          isCancelled = false
+        return data.value
+      }
+
+      setState({ error: e, finished: true })
+      onError?.(e, args)
+      runPluginHooks('onError', e, args)
+
       return Promise.reject(e)
     }
     finally {
@@ -122,7 +112,8 @@ export default function useCoreRequest<
   }
 
   const run = async (...args: TParams) => {
-    if (!ready.value) return
+    if (!ready.value)
+      return
     return coreRequest(...args)
   }
 
@@ -142,7 +133,7 @@ export default function useCoreRequest<
 
   // 更改数据
   const mutate = (newData: TFormatData | ((oldData: TFormatData) => TFormatData)) => {
-    const data = (isFunction(newData) ? newData(rawState) : newData) as TFormatData
+    const data = (isFunction(newData) ? newData(rawState.data as TFormatData) : newData) as TFormatData
     setState({ data })
     runPluginHooks('onMutate', data)
   }
@@ -152,7 +143,8 @@ export default function useCoreRequest<
     const oldData = rawState.data
     mutate(newData)
     run(...params).catch(() => {
-      if (oldData !== undefined) mutate(oldData)
+      if (oldData !== undefined)
+        mutate(oldData)
     })
   }
 

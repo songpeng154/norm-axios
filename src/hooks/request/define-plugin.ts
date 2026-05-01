@@ -7,9 +7,7 @@ function definePlugin<
   TParams extends any[] = any[],
   // 格式化数据
   TFormatData = TData,
-  // 原始数据
-  TRawData = any,
->(options: RequestPluginImplement<TData, TParams, TFormatData, TRawData>) {
+>(options: RequestPluginImplement<TData, TParams, TFormatData>) {
   return options
 }
 

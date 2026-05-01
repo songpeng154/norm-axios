@@ -56,6 +56,12 @@ const useLoadingPlugin = definePlugin(({ options, setState }) => {
         setLoading(false)
       })
     },
+    onError() {
+      // 错误时直接关闭 loading，不应用 loadingKeep
+      clearDelayTimer()
+      clearKeepTimer()
+      setLoading(false)
+    },
   }
 })
 

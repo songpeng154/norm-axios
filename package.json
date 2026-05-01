@@ -1,8 +1,8 @@
 {
-  "name": "norm-axios",
+  "name": "vue-rex",
   "type": "module",
   "version": "1.0.24",
-  "description": "Norm Axios 是一个基于 Axios 的约定式请求库，提供了约定式的请求方式与强大的 Hook API，帮助你更高效的开发。",
+  "description": "Vue Rex 是一个面向 Vue 3 的高度灵活、类型安全且插件化的请求 Hook 库，支持多后端适配、缓存、分页、插件化扩展等特性。",
   "license": "MIT",
   "keywords": [
     "axios",
@@ -10,8 +10,8 @@
     "ahooks",
     "vue-query",
     "react-query",
-    "约定式请求",
-    "norm-axios"
+    "vue-rex",
+    "vue-hooks"
   ],
   "author": {
     "email": "419626398@qq.com",
@@ -22,19 +22,40 @@
     "node": ">=18.12.0",
     "pnpm": ">=8.7.0"
   },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
-    "build": "rslib build && esno scripts/index.ts",
-    "build:watch": "rslib build --watch",
+    "build": "tsdown",
+    "build:watch": "tsdown --watch",
+    "doc": "vitepress dev doc",
+    "doc:build": "vitepress build doc --base=/vue-rex/",
+    "doc:preview": "vitepress preview doc",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint-staged": "lint-staged",
     "type-check": "vue-tsc --noEmit",
-    "publish": "cd ./dist && npm publish"
+    "publish": "npm publish"
   },
   "peerDependencies": {
-    "axios": "^1.8.1",
     "vue": "^3.5.13"
   },
   "dependencies": {
@@ -44,18 +65,33 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.12.0",
-    "@rslib/core": "^0.5.5",
+    "@faker-js/faker": "^10.4.0",
+    "@iconify/json": "^2.2.468",
+    "@shikijs/markdown-it": "^4.0.2",
     "@testing-library/vue": "^8.1.0",
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.14.1",
+    "@unocss/eslint-plugin": "^66.6.8",
+    "@unocss/preset-icons": "^66.6.8",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vitest/ui": "^3.1.1",
     "@vue/test-utils": "^2.4.6",
+    "axios": "^1.15.2",
     "bumpp": "^10.1.0",
     "eslint": "^9.24.0",
-    "esno": "^4.8.0",
     "happy-dom": "^17.4.4",
     "lint-staged": "^15.5.1",
+    "markdown-it": "^14.1.1",
+    "markdown-it-container": "^4.0.0",
+    "naive-ui": "^2.44.1",
+    "sass-embedded": "^1.99.0",
+    "shiki": "^4.0.2",
     "simple-git-hooks": "^2.12.1",
+    "tsdown": "^0.21.10",
+    "unocss": "^66.6.8",
+    "vite-plugin-fake-server": "^2.2.3",
+    "vite-plugin-mock": "^3.0.2",
+    "vitepress": "^1.6.4",
     "vitest": "^3.1.1",
     "vue-tsc": "^2.2.8"
   },
