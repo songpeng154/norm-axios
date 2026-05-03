@@ -1,7 +1,6 @@
 import type { RequestContext, RequestOptions, RequestPluginImplement, RequestResult, RequestServiceFn } from './types.ts'
 import { isBoolean } from 'es-toolkit'
-import { effectScope, inject, onScopeDispose, watch, watchEffect } from 'vue'
-import { GLOBAL_CONFIG_PROVIDER_SYMBOL } from '../global'
+import { effectScope, onScopeDispose, watch, watchEffect } from 'vue'
 import useCoreRequest from './core/core-request.ts'
 import useCoreState from './core/core-state.ts'
 import usePlugins from './core/plugins.ts'
@@ -23,9 +22,6 @@ export function useRequest<
 ): RequestResult<TData, TParams, TSerialized, TFormatData> {
   const scope = effectScope()
 
-  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL, {})
-  const config = { ...options, ...globalProvider?.common } as typeof options
-
   const allPlugins = [
     ...plugins,
     useCachePlugin,
@@ -33,18 +29,17 @@ export function useRequest<
     useRefreshOnWindowFocusPlugin,
     usePollingPlugin,
     useErrorRetryPlugin,
-    ...(globalProvider?.plugins || []),
   ] as RequestPluginImplement<TData, TParams, TSerialized, TFormatData>[]
 
   const { register, runPluginHooks } = usePlugins<TData, TParams, TSerialized, TFormatData>(allPlugins)
-  const coreState = useCoreState<TData, TParams, TSerialized, TFormatData>(config)
-  const coreRequest = useCoreRequest<TData, TParams, TSerialized, TFormatData>(coreState, service, config, runPluginHooks)
+  const coreState = useCoreState<TData, TParams, TSerialized, TFormatData>(options)
+  const coreRequest = useCoreRequest<TData, TParams, TSerialized, TFormatData>(coreState, service, options, runPluginHooks)
 
   const context: RequestContext<TData, TParams, TSerialized, TFormatData> = {
     ...coreState,
     ...coreRequest,
     scope,
-    options: config,
+    options,
   }
 
   onScopeDispose(() => scope.stop())
@@ -53,17 +48,17 @@ export function useRequest<
   const autoRun = () => coreRequest.run(...coreState.rawState.params)
 
   // 首次默认调用
-  if (!config.manual && config.watchSource !== true)
+  if (!options.manual && options.watchSource !== true)
     void autoRun()
 
   scope.run(() => {
-    const { watchSource, watchDeep } = config
+    const { watchSource, watchDeep } = options
 
     // 依赖自动收集（manual 时跳过首次执行）
     if (watchSource === true) {
       let isFirstRun = true
       watchEffect(() => {
-        if (config.manual && isFirstRun) {
+        if (options.manual && isFirstRun) {
           isFirstRun = false
           return
         }

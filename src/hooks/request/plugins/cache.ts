@@ -69,7 +69,7 @@ const useCachePlugin = definePlugin(({ options, setState, params }) => {
       setCachePromise(cacheKey, servicePromise)
       return { servicePromise }
     },
-    onSuccess(data, rawData, params) {
+    onSuccess(data, _rawData, params) {
       _setCache(cacheKey, {
         data,
         params: params as [],

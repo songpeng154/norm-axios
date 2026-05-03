@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clearCache, useRequest } from '../../src'
+import { clearCache, useRequest } from '../../src/hooks'
 import { asyncAwait, withSetup } from '../utils.ts'
 
 describe('useRequest -> cache 模块测试', () => {

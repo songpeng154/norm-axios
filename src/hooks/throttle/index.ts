@@ -1,4 +1,4 @@
-import type { DebouncedFunction } from 'es-toolkit/dist/compat/function/debounce'
+import type { DebouncedFunction } from 'es-toolkit'
 import type { MaybeRef } from 'vue'
 import type { AnyFunction } from '../../types/utils.ts'
 import { throttle } from 'es-toolkit/compat'
@@ -22,7 +22,7 @@ function useThrottle<F extends AnyFunction>(fn: F, ms: MaybeRef<number>, options
     return throttle(fn, toValue(ms), {
       leading: toValue(options.leading),
       trailing: toValue(options.trailing),
-    })
+    }) as DebouncedFunction<F>
   }
   let throttleFn: DebouncedFunction<F> = createThrottle()
 

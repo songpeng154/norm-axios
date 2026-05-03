@@ -5,13 +5,13 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "moduleDetection": "force",
     "useDefineForClassFields": true,
-    "module": "nodenext",
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "typeRoots": [
       "./node_modules/@types",
       "./src/types"
     ],
-    "types": ["vitest/globals", "node"],
+    "types": ["node"],
     "allowImportingTsExtensions": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,

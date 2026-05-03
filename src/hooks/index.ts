@@ -1,18 +1,11 @@
+import { createPagination } from '../core/pagination'
+import { createRequest } from '../core/request'
 import definePlugin from './request/define-plugin.ts'
 import { clearCache, getCacheAll } from './request/utils/cache.ts'
 
-export * from '../core/request/create-request.ts'
+export { usePagination } from './pagination'
+export type { PaginationData, PaginationOptions, PaginationResult } from './pagination/types.ts'
+export { useRequest } from './request/index.ts'
+export type { RequestContext, RequestOptions, RequestPluginImplement, RequestResult, RequestServiceFn } from './request/types.ts'
 
-export * from './debounce/index'
-export * from './global/index'
-
-export * from './global/types'
-export * from './pagination/create-pagination'
-export * from './pagination/index'
-
-export * from './pagination/types'
-export * from './request/index'
-export * from './request/types'
-export * from './throttle/index'
-
-export { clearCache, definePlugin, getCacheAll }
+export { clearCache, createPagination, createRequest, definePlugin, getCacheAll }

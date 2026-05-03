@@ -1,36 +1,8 @@
 import type { ArrayElement, Get } from 'type-fest'
-import type { RequestServiceFn } from '../request/types.ts'
-import type { PaginationOptions, PaginationResult } from './types.ts'
+import type { PaginationOptions, PaginationResult, RequestServiceFn } from '../../hooks'
+import type { CreatePaginationConfig } from './types.ts'
 import { get } from 'es-toolkit/compat'
-import { usePagination } from './index.ts'
-
-export interface CreatePaginationConfig<
-  TListKey extends string = string,
-  TTotalKey extends string = string,
-> {
-  /**
-   * 列表字段路径，支持点号嵌套
-   * TypeScript 会自动推导 list.value 的类型为 ArrayElement<Get<TData, TListKey>>[]
-   */
-  listKey: TListKey
-
-  /**
-   * 总条数字段路径，支持点号嵌套
-   */
-  totalKey: TTotalKey
-
-  /**
-   * 分页参数序列化方式
-   * @example
-   * paginationSerializer: (page, size) => ({ current: page, size })
-   */
-  paginationSerializer?: (page: number, pageSize: number) => Record<string, any>
-
-  /**
-   * 全局默认配置，会被调用时的 options 覆盖
-   */
-  options?: Omit<PaginationOptions, 'dataSerializer'>
-}
+import { usePagination } from '../../hooks'
 
 /**
  * 创建一个绑定了提取逻辑的分页 hook
@@ -72,7 +44,7 @@ export function createPagination<
     service: RequestServiceFn<TData, TParams>,
     options?: Omit<PaginationOptions<TData, TParams, TItem, TFormatData>, 'dataSerializer'>,
   ): PaginationResult<TData, TParams, TItem, TFormatData> {
-    return usePagination<TData, TParams, TItem, TFormatData>(service, {
+    const _options = {
       ...config.options,
       ...options,
       dataSerializer: (data: any) => ({
@@ -80,6 +52,8 @@ export function createPagination<
         total: get(data, totalKey) ?? 0,
       }),
       paginationSerializer: config.paginationSerializer,
-    } as PaginationOptions<TData, TParams, TItem, TFormatData>)
+    } as PaginationOptions<TData, TParams, TItem, TFormatData>
+
+    return usePagination<TData, TParams, TItem, TFormatData>(service, _options)
   }
 }

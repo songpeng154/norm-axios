@@ -1,4 +1,4 @@
-import type { DebouncedFunction } from 'es-toolkit/dist/compat/function/debounce'
+import type { DebouncedFunction } from 'es-toolkit'
 import type { MaybeRef } from 'vue'
 import type { AnyFunction } from '../../types/utils.ts'
 import { debounce } from 'es-toolkit/compat'
@@ -28,7 +28,7 @@ function useDebounce<F extends AnyFunction>(fn: F, ms: MaybeRef<number>, options
       leading: toValue(options.leading),
       trailing: toValue(options.trailing),
       maxWait: toValue(options.maxWait),
-    })
+    }) as DebouncedFunction<F>
   }
 
   let debounceFn: DebouncedFunction<F> = createDebounceFn()

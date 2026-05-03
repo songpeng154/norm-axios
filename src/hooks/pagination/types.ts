@@ -19,7 +19,7 @@ export interface PaginationOptions<
   TFormatData = TItem,
 > extends Omit<
     RequestOptions<TData, TParams, PaginationData<TItem>, PaginationData<TFormatData>>,
-    'dataSerializer' | 'formatData'
+     'dataSerializer' | 'formatData'
   > {
   /** 初始页码 */
   initialPage?: number
