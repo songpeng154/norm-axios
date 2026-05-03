@@ -6,13 +6,16 @@ export default function useCoreState<
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  // dataSerializer 返回的数据类型
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
->(options: RequestOptions<TData, TParams, TFormatData>) {
-  type State = RequestState<TData, TParams, TFormatData>
+  TFormatData = TSerialized,
+>(options: RequestOptions<TData, TParams, TSerialized, TFormatData>) {
+  type State = RequestState<TData, TParams, TSerialized, TFormatData>
 
   const state: State = {
     data: options.initialData,
+    rawData: undefined,
     error: undefined,
     params: (options.defaultParams || []) as TParams,
     loading: false,
@@ -29,6 +32,7 @@ export default function useCoreState<
     loading: computed(() => stateReactive.loading),
     finished: computed(() => stateReactive.finished),
     data: computed(() => stateReactive.data),
+    rawData: computed(() => stateReactive.rawData),
     error: computed(() => stateReactive.error),
     params: computed(() => stateReactive.params),
     setState,

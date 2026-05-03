@@ -1,10 +1,4 @@
-import type {
-  RequestContext,
-  RequestOptions,
-  RequestPluginImplement,
-  RequestResult,
-  RequestServiceFn,
-} from './types.ts'
+import type { RequestContext, RequestOptions, RequestPluginImplement, RequestResult, RequestServiceFn } from './types.ts'
 import { isBoolean } from 'es-toolkit'
 import { effectScope, inject, onScopeDispose, watch, watchEffect } from 'vue'
 import { GLOBAL_CONFIG_PROVIDER_SYMBOL } from '../global'
@@ -18,75 +12,69 @@ import usePollingPlugin from './plugins/polling.ts'
 import useRefreshOnWindowFocusPlugin from './plugins/window-focus.ts'
 
 export function useRequest<
-  // 数据
   TData = any,
-  // 方法参数
   TParams extends any[] = any[],
-  // 格式化数据
-  TFormatData = TData,
+  TSerialized = TData,
+  TFormatData = TSerialized,
 >(
   service: RequestServiceFn<TData, TParams>,
-  options: RequestOptions<TData, TParams, TFormatData> = {},
-  plugins: RequestPluginImplement<TData, TParams, TFormatData>[] = [],
-): RequestResult<TData, TParams, TFormatData> {
+  options: RequestOptions<TData, TParams, TSerialized, TFormatData> = {},
+  plugins: RequestPluginImplement<TData, TParams, TSerialized, TFormatData>[] = [],
+): RequestResult<TData, TParams, TSerialized, TFormatData> {
   const scope = effectScope()
 
   const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL, {})
+  const config = { ...options, ...globalProvider?.common } as typeof options
 
   const allPlugins = [
     ...plugins,
     useCachePlugin,
-    // useAutoRunPlugin,
     useLoadingPlugin,
     useRefreshOnWindowFocusPlugin,
     usePollingPlugin,
     useErrorRetryPlugin,
     ...(globalProvider?.plugins || []),
-  ] as RequestPluginImplement<TData, TParams, TFormatData>[]
+  ] as RequestPluginImplement<TData, TParams, TSerialized, TFormatData>[]
 
-  const config = Object.assign(options, globalProvider?.common)
+  const { register, runPluginHooks } = usePlugins<TData, TParams, TSerialized, TFormatData>(allPlugins)
+  const coreState = useCoreState<TData, TParams, TSerialized, TFormatData>(config)
+  const coreRequest = useCoreRequest<TData, TParams, TSerialized, TFormatData>(coreState, service, config, runPluginHooks)
 
-  const { register, runPluginHooks } = usePlugins<TData, TParams, TFormatData>(allPlugins)
-  const coreState = useCoreState<TData, TParams, TFormatData>(config)
-  const coreRequest = useCoreRequest<TData, TParams, TFormatData>(coreState, service, config, runPluginHooks)
-
-  const context: RequestContext<TData, TParams, TFormatData> = {
+  const context: RequestContext<TData, TParams, TSerialized, TFormatData> = {
     ...coreState,
     ...coreRequest,
     scope,
     options: config,
   }
 
-  onScopeDispose(() => {
-    scope.stop()
-  })
-
+  onScopeDispose(() => scope.stop())
   register(context)
+
+  const autoRun = () => coreRequest.run(...coreState.rawState.params)
 
   // 首次默认调用
   if (!config.manual && config.watchSource !== true)
-    void coreRequest.run(...coreState.rawState.params).catch(() => {})
+    void autoRun()
 
   scope.run(() => {
-    // 依赖自动收集
-    config.watchSource === true && watchEffect(() => {
-      void coreRequest.run(...coreState.rawState.params).catch(() => {})
-    })
+    const { watchSource, watchDeep } = config
+
+    // 依赖自动收集（manual 时跳过首次执行）
+    if (watchSource === true) {
+      let isFirstRun = true
+      watchEffect(() => {
+        if (config.manual && isFirstRun) {
+          isFirstRun = false
+          return
+        }
+        autoRun()
+      })
+    }
 
     // 手动收集依赖
-    !isBoolean(config.watchSource) && config.watchSource && watch(
-      config.watchSource,
-      () => {
-        void coreRequest.run(...coreState.rawState.params).catch(() => {})
-      },
-      {
-        deep: config.watchDeep,
-      },
-    )
+    if (watchSource && !isBoolean(watchSource))
+      watch(watchSource, autoRun, { deep: watchDeep })
   })
 
-  return {
-    ...coreState,
-    ...coreRequest,
-  }
+  return { ...coreState, ...coreRequest }
 }

@@ -1,4 +1,4 @@
-import type { DebouncedFunction } from 'es-toolkit/dist/compat/function/debounce'
+import type { DebouncedFunction } from 'es-toolkit'
 import type { EffectScope, MaybeRef, Ref, WatchSource } from 'vue'
 import type { Undefinable, WrapWithComputed } from '../../types/utils.ts'
 import type { CachedData } from './utils/cache.ts'
@@ -18,8 +18,10 @@ export interface RequestOptions<
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  // dataSerializer 返回的数据类型，未提供时等于 TData
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
+  TFormatData = TSerialized,
 > {
   /**
    * data 初始的数据
@@ -170,18 +172,29 @@ export interface RequestOptions<
   /**
    * 获取自定义缓存
    */
-  getCache?: (cacheKey: string, params: TParams) => CachedData<TData, TParams, TFormatData>
+  getCache?: (cacheKey: string, params: TParams) => CachedData<TData, TParams, TSerialized, TFormatData>
 
   /**
    * 设置自定义缓存
    */
-  setCache?: (cacheKey: string, cacheData: CachedData<TData, TParams, TFormatData>) => void
+  setCache?: (cacheKey: string, cacheData: CachedData<TData, TParams, TSerialized, TFormatData>) => void
+
+  /**
+   * 从 service 返回的数据中提取真实数据
+   * 在 formatData 之前执行，用于解包响应体
+   *
+   * @example
+   * dataSerializer: (res) => res.data
+   */
+  dataSerializer?: (data: TData, params: TParams) => TSerialized
 
   /**
    * 格式化数据
-   * service resolve 后，对原始数据做二次处理
+   * service resolve 后（经过 dataSerializer 提取后），对数据做二次处理
+   * data 类型：有 dataSerializer 时为 TSerialized，否则为 TData
+   * rawData 类型：service 返回的原始数据 TData
    */
-  formatData?: (data: TData, params: TParams) => TFormatData
+  formatData?: (data: TSerialized, rawData: TData, params: TParams) => TFormatData
 
   /**
    * 请求之前执行
@@ -191,11 +204,13 @@ export interface RequestOptions<
 
   /**
    * 请求成功时执行
-   * @param data 响应数据
+   * @param data 响应数据（经过 formatData 处理后）
+   * @param rawData 原始响应数据（经过 dataSerializer 处理后，未经 formatData）
    * @param params 请求参数
    */
   onSuccess?: (
     data: TFormatData,
+    rawData: TData,
     params: TParams,
   ) => void
 
@@ -208,6 +223,14 @@ export interface RequestOptions<
     error: any,
     params: TParams,
   ) => void
+
+  /**
+   * 请求失败时是否抛出错误（reject promise）
+   * 默认 false，错误仅通过 onError 回调和 error 状态处理
+   * 设为 true 时，run() 返回 rejected promise，可配合 try/catch 或 Error Boundary 使用
+   * @default false
+   */
+  throwOnError?: boolean
 
   /**
    * 最后执行，不管 service 成功失败都会执行
@@ -227,13 +250,19 @@ export interface RequestState<
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
+  TFormatData = TSerialized,
 > {
   /**
-   * service resolve 的数据（经过 formatData 处理后）
+   * service resolve 的数据,会经过 formatData 处理
    */
   data: Undefinable<TFormatData>
+
+  /**
+   * service resolve 的数据
+   */
+  rawData: Undefinable<TData>
 
   /**
    * service reject/throw 的错误
@@ -261,8 +290,9 @@ export interface RequestMethod<
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
+  TFormatData = TSerialized,
 > {
   /**
    * 手动触发 service 执行。异常通过 onError 反馈，或者 await run(...).catch() 捕获
@@ -308,14 +338,16 @@ export interface RequestMethod<
 export type RequestResult<
   TData = any,
   TParams extends any[] = any[],
-  TFormatData = TData,
-> = WrapWithComputed<RequestState<TData, TParams, TFormatData>>
-  & RequestMethod<TData, TParams, TFormatData>
+  TSerialized = TData,
+  TFormatData = TSerialized,
+> = WrapWithComputed<RequestState<TData, TParams, TSerialized, TFormatData>>
+  & RequestMethod<TData, TParams, TSerialized, TFormatData>
 
 export interface RequestPluginHooks<
   TData = any,
   TParams extends any[] = any[],
-  TFormatData = TData,
+  TSerialized = TData,
+  TFormatData = TSerialized,
 > {
   /**
    * 请求之前触发
@@ -344,6 +376,7 @@ export interface RequestPluginHooks<
    */
   onSuccess?: (
     data: TFormatData,
+    rawData: TData,
     params: TParams,
   ) => void
 
@@ -371,37 +404,31 @@ export interface RequestPluginHooks<
 export interface RequestContext<
   TData = any,
   TParams extends any[] = any[],
-  TFormatData = TData,
-> extends RequestResult<TData, TParams, TFormatData> {
+  TSerialized = TData,
+  TFormatData = TSerialized,
+> extends RequestResult<TData, TParams, TSerialized, TFormatData> {
   // 当前作用域
   scope: EffectScope
 
   // 配置项
-  options: RequestOptions<TData, TParams, TFormatData>
+  options: RequestOptions<TData, TParams, TSerialized, TFormatData>
 
   // 原始 state
-  rawState: RequestState<TData, TParams, TFormatData>
+  rawState: RequestState<TData, TParams, TSerialized, TFormatData>
 
   // 设置状态
   setState: (
-    state: Partial<RequestState<TData, TParams, TFormatData>>,
+    state: Partial<RequestState<TData, TParams, TSerialized, TFormatData>>,
   ) => void
 }
 
 export interface RequestPluginImplement<
   TData = any,
   TParams extends any[] = any[],
-  TFormatData = TData,
+  TSerialized = TData,
+  TFormatData = TSerialized,
 > {
   (
-    context: RequestContext<TData, TParams, TFormatData>,
-  ): RequestPluginHooks<TData, TParams, TFormatData> | void
+    context: RequestContext<TData, TParams, TSerialized, TFormatData>,
+  ): RequestPluginHooks<TData, TParams, TSerialized, TFormatData> | void
 }
-
-// 工具：从 RequestServiceFn 推导 TData
-export type InferServiceData<T extends RequestServiceFn<any, any>> =
-  T extends RequestServiceFn<infer D, any> ? D : never
-
-// 工具：从 RequestServiceFn 推导 TParams
-export type InferServiceParams<T extends RequestServiceFn<any, any>> =
-  T extends RequestServiceFn<any, infer P> ? P : never

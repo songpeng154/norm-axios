@@ -40,7 +40,7 @@ const useErrorRetryPlugin = definePlugin(({ finished, options, refresh }) => {
       if (isStopRetry.value) return resetErrorCount()
 
       updateErrorCount()
-      timer = setTimeout(() => refresh().catch(() => {}), retryIntervalRef.value)
+      timer = setTimeout(() => refresh(), retryIntervalRef.value)
     },
   }
 })

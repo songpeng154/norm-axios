@@ -1,145 +1,97 @@
-import type { PaginationAndFetchOptions, PaginationResult } from './types.ts'
 import type { RequestServiceFn } from '../request/types.ts'
-import { useEventListener } from '@vueuse/core'
-import { inject, computed, ref, watch, toValue } from 'vue'
-import { GLOBAL_CONFIG_PROVIDER_SYMBOL } from '../global'
+import type { PaginationData, PaginationOptions, PaginationResult } from './types.ts'
+import { computed, ref, watch } from 'vue'
 import { useRequest } from '../request'
 
 export function usePagination<
-  // service resolve 的原始类型（任意结构）
   TData = any,
-  // service 的参数类型
-  TParams extends any[] = any[],
-  // 列表项类型，从 dataSerializer 推导
+  TParams extends [Record<string, any>] = [Record<string, any>],
   TItem = any,
+  TFormatData = TItem,
 >(
   service: RequestServiceFn<TData, TParams>,
-  options: PaginationAndFetchOptions<TData, TParams, TItem> = {},
-): PaginationResult<TData, TParams, TItem> {
-  const globalProvider = inject(GLOBAL_CONFIG_PROVIDER_SYMBOL, {} as any)
-  const globalPagination = (globalProvider.pagination || {}) as any
-
+  options: PaginationOptions<TData, TParams, TItem, TFormatData>,
+): PaginationResult<TData, TParams, TItem, TFormatData> {
   const {
-    scrollTarget,
-    scrollOffset = 100,
+    dataSerializer,
+    formatList,
+    paginationSerializer = (page, pageSize) => ({ page, pageSize } as Partial<TParams[0]>),
     initialPage = 1,
     initialPageSize = 10,
-    appendMode = false,
-    resetOnPageSizeChange = true,
-    paginationSerializer = globalPagination.paginationSerializer ?? ((page: number, pageSize: number) => ({ page, pageSize })),
-    dataSerializer = globalPagination.dataSerializer ?? ((data: any) => ({
-      list: data?.list ?? [],
-      total: data?.total ?? 0,
-    })),
-    defaultParams,
-    onSuccess,
+    pageWatch = true,
+    resetPageWhenPageSizeChange = true,
+    watchSource,
     ...restOptions
   } = options
 
-  // ─── 分页状态 ───────────────────────────────────────────────
+  // ─── 分页状态 ─────────────────────────────────────────────
   const page = ref(initialPage)
   const pageSize = ref(initialPageSize)
-  // 追加模式下积累的列表
-  const accList = ref<TItem[]>([])
 
-  // ─── 核心请求 ────────────────────────────────────────────────
-  const fetchInstance = useRequest<TData, TParams>(
-    (...args: TParams) => {
-      const [firstArg, ...rest] = args as any[]
-      const paginationArg = paginationSerializer(page.value, pageSize.value)
-      const mergedFirst = firstArg && typeof firstArg === 'object' && !Array.isArray(firstArg)
-        ? { ...firstArg, ...paginationArg }
-        : paginationArg
-      return (service as any)(mergedFirst, ...rest)
-    },
+  // ─── 包装 service，注入分页参数 ───────────────────────────
+  const wrappedService = (...args: TParams) => {
+    const [firstArg] = args
+    const paginationArg = paginationSerializer(page.value, pageSize.value)
+    const mergedArg = { ...firstArg, ...paginationArg }
+    return service(...[mergedArg] as unknown as TParams)
+  }
+
+  // ─── formatList → formatData ─────────────────────────────
+  const formatData = formatList
+    ? (data: PaginationData<TItem>, rawData: TData, params: TParams): PaginationData<TFormatData> => ({
+        list: formatList(data.list, rawData, params),
+        total: data.total,
+      })
+    : undefined
+
+  // ─── 调用 useRequest ──────────────────────────────────────
+  const fetchInstance = useRequest<TData, TParams, PaginationData<TItem>, PaginationData<TFormatData>>(
+    wrappedService,
     {
       ...restOptions,
       manual: true,
-      onSuccess(data: TData, params: TParams) {
-        // 追加模式：新数据追加到末尾
-        if (toValue(appendMode)) {
-          const { list } = dataSerializer(data)
-          accList.value = [...accList.value, ...list] as TItem[]
-        }
-        onSuccess?.(data, params)
-      },
+      watchSource: pageWatch && watchSource === true ? undefined : watchSource,
+      dataSerializer,
+      formatData,
     },
   )
 
-  // ─── 派生计算 ─────────────────────────────────────────────────
-  const serialized = computed(() =>
-    fetchInstance.data.value !== undefined
-      ? dataSerializer(fetchInstance.data.value)
-      : { list: [] as TItem[], total: 0 },
+  const paginationData = computed(() =>
+    fetchInstance.data.value ?? { list: [] as TFormatData[], total: 0 },
   )
 
-  const total = computed(() => serialized.value.total)
+  const list = computed<TFormatData[]>(() => paginationData.value.list)
+
+  const total = computed(() => paginationData.value.total)
   const totalPage = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
   const isLastPage = computed(() => page.value >= totalPage.value)
-  const hasMore = computed(() => !isLastPage.value)
 
-  const list = computed<TItem[]>(() => {
-    if (toValue(appendMode))
-      return accList.value
-    return serialized.value.list
-  })
-
-  // ─── 分页操作 ─────────────────────────────────────────────────
-  const run = () => {
-    const params = defaultParams ?? ([] as unknown as TParams)
-    return fetchInstance.run(...params).catch(() => {})
-  }
-
-  const reset = () => {
-    page.value = initialPage
-    accList.value = []
-  }
-
-  const loadMore = () => {
-    if (!isLastPage.value && fetchInstance.finished.value)
-      page.value += 1
-  }
-
-  // ─── 响应式触发 ────────────────────────────────────────────────
   watch(page, () => {
-    run()
+    if (pageWatch)
+      fetchInstance.refresh().catch(() => {})
   })
 
   watch(pageSize, () => {
-    if (resetOnPageSizeChange && page.value !== initialPage) {
-      reset()
-    }
-    else {
-      run()
-    }
+    const wasPage1 = page.value === 1
+    if (resetPageWhenPageSizeChange)
+      page.value = 1
+    if (wasPage1)
+      fetchInstance.refresh().catch(() => {})
   })
 
-  // 初始化执行一次（manual: true 时跳过）
-  if (!restOptions.manual)
-    run()
-
-  // ─── 滚动加载 ─────────────────────────────────────────────────
-  if (scrollTarget) {
-    useEventListener(scrollTarget, 'scroll', (event) => {
-      const { scrollHeight, scrollTop, clientHeight } = event.target as HTMLElement
-      const nearBottom = scrollTop + clientHeight >= scrollHeight - scrollOffset
-      if (nearBottom && hasMore.value && fetchInstance.finished.value) {
-        loadMore()
-      }
-    })
+  const reset = () => {
+    page.value = initialPage
   }
 
-  // ─── 返回值 ───────────────────────────────────────────────────
+  // ─── 返回值 ───────────────────────────────────────────────
   return {
     ...fetchInstance,
-    run,
     list,
     page,
     pageSize,
     total,
     totalPage,
     isLastPage,
-    hasMore,
-    loadMore,
+    reset,
   }
 }

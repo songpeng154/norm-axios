@@ -2,40 +2,29 @@
   "compilerOptions": {
     "target": "ESNext",
     "jsx": "preserve",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "moduleDetection": "force",
     "useDefineForClassFields": true,
-    "baseUrl": ".",
-    "module": "ESNext",
-    /* Bundler mode */
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
+    "module": "nodenext",
+    "moduleResolution": "bundler",
     "typeRoots": [
-      "./node_modules/@types/",
-      "./src/types",
-      "./node_modules"
+      "./node_modules/@types",
+      "./src/types"
     ],
-    "types": [
-      "vitest/globals",
-      "node"
-    ],
+    "types": ["vitest/globals", "node"],
     "allowImportingTsExtensions": true,
-    /* Linting */
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+
+    // 业务项目保留 noEmit，删掉 declaration 相关的
     "noEmit": true,
+
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "declaration": true,
-    "emitDeclarationOnly": true,
     "allowJs": true
   },
   "include": [

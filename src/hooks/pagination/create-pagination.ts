@@ -1,19 +1,55 @@
-import type { PaginationAndFetchOptions, PaginationResult } from './types.ts'
+import type { ArrayElement, Get } from 'type-fest'
 import type { RequestServiceFn } from '../request/types.ts'
+import type { PaginationOptions, PaginationResult } from './types.ts'
+import { get } from 'es-toolkit/compat'
 import { usePagination } from './index.ts'
+
+export interface CreatePaginationConfig<
+  TListKey extends string = string,
+  TTotalKey extends string = string,
+> {
+  /**
+   * 列表字段路径，支持点号嵌套
+   * TypeScript 会自动推导 list.value 的类型为 ArrayElement<Get<TData, TListKey>>[]
+   */
+  listKey: TListKey
+
+  /**
+   * 总条数字段路径，支持点号嵌套
+   */
+  totalKey: TTotalKey
+
+  /**
+   * 分页参数序列化方式
+   * @example
+   * paginationSerializer: (page, size) => ({ current: page, size })
+   */
+  paginationSerializer?: (page: number, pageSize: number) => Record<string, any>
+
+  /**
+   * 全局默认配置，会被调用时的 options 覆盖
+   */
+  options?: Omit<PaginationOptions, 'dataSerializer'>
+}
 
 /**
  * 创建一个绑定了提取逻辑的分页 hook
  *
- * 通过 listKey / totalKey 指定字段名，TypeScript 会在每次调用 usePage(service) 时
- * 从 service 的返回类型中自动推导出列表项类型，无需任何泛型标注。
+ * 通过 listKey / totalKey 指定字段路径（支持点号嵌套如 'data.list'），
+ * TypeScript 会在每次调用 usePage(service) 时从 service 的返回类型中
+ * 自动推导出列表项类型，无需任何泛型标注。
  *
  * @example
- * // src/api/pagination.ts — 配置一次
+ * // 简单路径
  * export const usePage = createPagination({
  *   listKey: 'records',
  *   totalKey: 'totalCount',
- *   paginator: (page, size) => ({ current: page, size }),
+ * })
+ *
+ * // 嵌套路径（通用响应体）
+ * export const usePage = createPagination({
+ *   listKey: 'data.list',
+ *   totalKey: 'data.total',
  * })
  *
  * // 组件里 — 自动推导，无需泛型
@@ -21,53 +57,29 @@ import { usePagination } from './index.ts'
  * const { list } = usePage(getPostList)   // list.value → Post[]   ✅
  */
 export function createPagination<
-  TListKey extends string = 'list',
-  TTotalKey extends string = 'total',
->(config: {
-  /**
-   * 列表字段名，对应 service 返回数据中的列表字段
-   * TypeScript 会自动推导 list.value 的类型为 TData[TListKey][number]
-   * @default 'list'
-   */
-  listKey?: TListKey
+  TListKey extends string,
+  TTotalKey extends string,
+>(config: CreatePaginationConfig<TListKey, TTotalKey>) {
+  const listKey = config.listKey as string
+  const totalKey = config.totalKey as string
 
-  /**
-   * 总条数字段名
-   * @default 'total'
-   */
-  totalKey?: TTotalKey
-
-  /**
-   * 分页参数序列化方式
-   * @example
-   * paginator: (page, size) => ({ current: page, size })
-   */
-  paginator?: (page: number, size: number) => Record<string, any>
-}) {
-  const listKey = (config.listKey ?? 'list') as TListKey
-  const totalKey = (config.totalKey ?? 'total') as TTotalKey
-
-  /**
-   * 已绑定提取逻辑的分页 hook
-   * TData 从 service 推导，TItem = TData[TListKey][number] 自动展开
-   */
-  return function usePage<
-    TData extends { [K in TListKey]: any[] } & { [K in TTotalKey]: number },
-    TParams extends any[],
+  return function <
+    TData extends object,
+    TParams extends [Record<string, any>] = [Record<string, any>],
+    TItem = ArrayElement<Get<TData, TListKey>>,
+    TFormatData = TItem,
   >(
     service: RequestServiceFn<TData, TParams>,
-    options?: Omit<
-      PaginationAndFetchOptions<TData, TParams, TData[TListKey][number]>,
-      'dataSerializer' | 'paginationSerializer'
-    >,
-  ): PaginationResult<TData, TParams, TData[TListKey][number]> {
-    return usePagination<TData, TParams, TData[TListKey][number]>(service, {
+    options?: Omit<PaginationOptions<TData, TParams, TItem, TFormatData>, 'dataSerializer'>,
+  ): PaginationResult<TData, TParams, TItem, TFormatData> {
+    return usePagination<TData, TParams, TItem, TFormatData>(service, {
+      ...config.options,
       ...options,
-      dataSerializer: (data: TData) => ({
-        list: data[listKey],
-        total: data[totalKey],
+      dataSerializer: (data: any) => ({
+        list: get(data, listKey) ?? [],
+        total: get(data, totalKey) ?? 0,
       }),
-      paginationSerializer: config.paginator,
-    })
+      paginationSerializer: config.paginationSerializer,
+    } as PaginationOptions<TData, TParams, TItem, TFormatData>)
   }
 }

@@ -3,8 +3,9 @@ export interface CachedData<
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
+  TFormatData = TSerialized,
 > {
   // 数据
   data: TFormatData

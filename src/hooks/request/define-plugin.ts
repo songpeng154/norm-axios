@@ -5,9 +5,10 @@ function definePlugin<
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
->(options: RequestPluginImplement<TData, TParams, TFormatData>) {
+  TFormatData = TSerialized,
+>(options: RequestPluginImplement<TData, TParams, TSerialized, TFormatData>) {
   return options
 }
 

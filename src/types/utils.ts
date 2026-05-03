@@ -19,3 +19,27 @@ export type WrapWithMaybeRef<T extends Recordable> = {
 export type WrapWithComputed<T extends Recordable> = {
   [K in keyof T]: ComputedRef<T[K]>;
 }
+
+// ─── 点号路径类型工具 ─────────────────────────────────────────
+
+/** 将点号路径字符串拆分为元组：'a.b.c' → ['a', 'b', 'c'] */
+export type SplitPath<S extends string, Acc extends string[] = []> =
+  S extends `${infer Head}.${infer Tail}`
+    ? SplitPath<Tail, [...Acc, Head]>
+    : [...Acc, S]
+
+/** 按元组路径从 T 中取值 */
+export type PathValueByTuple<T, Keys extends readonly string[]> =
+  Keys extends readonly [infer First, ...infer Rest]
+    ? First extends keyof T
+      ? Rest extends readonly string[]
+        ? PathValueByTuple<T[First], Rest>
+        : never
+      : never
+    : T
+
+/** 从 T 中按点号路径取值：PathValue<Obj, 'a.b'> → Obj['a']['b'] */
+export type PathValue<T, P extends string> = PathValueByTuple<T, SplitPath<P>>
+
+/** 从 T 中按路径提取数组元素类型 */
+export type PathItem<T, P extends string> = PathValue<T, P> extends (infer Item)[] ? Item : never

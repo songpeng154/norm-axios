@@ -1,107 +1,69 @@
-import type { ComputedRef, MaybeRef, Ref, ShallowRef } from 'vue'
+import type { ComputedRef, Ref } from 'vue'
 import type { RequestOptions, RequestResult } from '../request/types.ts'
 
-// ─── 分页专属配置（可用于全局，使用 any 以兼容任意数据结构）────────────────
-export interface PaginationOptions {
-  /**
-   * 滚动加载的容器，设置后在容器滚动到底部时自动将 page + 1
-   */
-  scrollTarget?: MaybeRef<HTMLElement> | ShallowRef<HTMLElement | null>
-
-  /**
-   * 触发滚动加载的距底部距离阈值（px）
-   * @default 100
-   */
-  scrollOffset?: number
-
-  /**
-   * 初始页码
-   * @default 1
-   */
-  initialPage?: number
-
-  /**
-   * 初始每页条数
-   * @default 10
-   */
-  initialPageSize?: number
-
-  /**
-   * 追加模式（「加载更多」场景）
-   * 开启后每次新数据会追加到现有列表末尾，而不是替换
-   * @default false
-   */
-  appendMode?: MaybeRef<boolean>
-
-  /**
-   * 当 pageSize 变化时是否重置 page 到第一页
-   * @default true
-   */
-  resetOnPageSizeChange?: boolean
-
-  /**
-   * 自定义分页参数的序列化方式
-   * 用于适配后端不同的字段名
-   * 推荐在 useGlobalConfigProvider 中统一配置，无需每次传入
-   * @default (page, pageSize) => ({ page, pageSize })
-   * @example
-   * // MyBatis-Plus 风格
-   * paginationSerializer: (page, pageSize) => ({ current: page, size: pageSize })
-   */
-  paginationSerializer?: (page: number, pageSize: number) => Record<string, any>
-
-  /**
-   * 从 service 返回的数据中提取列表和总条数
-   * 推荐在 useGlobalConfigProvider 中统一配置一次，无需每次传入
-   *
-   * @default (data) => ({ list: data?.list ?? [], total: data?.total ?? 0 })
-   *
-   * @example
-   * // 在 App.vue 全局配置一次
-   * useGlobalConfigProvider({
-   *   pagination: {
-   *     dataSerializer: (data) => ({ list: data.records, total: data.totalCount })
-   *   }
-   * })
-   */
-  dataSerializer?: (data: any) => { list: any[], total: number }
+/**
+ * 分页数据标准结构
+ */
+export interface PaginationData<TItem = any> {
+  list: TItem[]
+  total: number
 }
 
 /**
- * usePagination 局部调用的完整配置
- * 在这里覆盖 dataSerializer 签名以提供精确的类型推导
- *
- * TData  — service resolve 的原始数据类型
- * TParams — service 的参数类型
- * TItem  — 列表项类型，从 dataSerializer 的返回值中自动推导
+ * 分页配置
  */
-export type PaginationAndFetchOptions<
+export interface PaginationOptions<
   TData = any,
-  TParams extends any[] = any[],
+  TParams extends [Record<string, any>] = [Record<string, any>],
   TItem = any,
-> = Omit<PaginationOptions, 'dataSerializer'> &
-  Omit<RequestOptions<TData, TParams>, 'defaultParams' | 'formatData'> & {
-    defaultParams?: TParams
-    /**
-     * 从 service 数据中提取 list 和 total
-     * 局部配置时可精确推导 TItem 类型
-     */
-    dataSerializer?: (data: TData) => { list: TItem[], total: number }
-  }
+  TFormatData = TItem,
+> extends Omit<
+    RequestOptions<TData, TParams, PaginationData<TItem>, PaginationData<TFormatData>>,
+    'dataSerializer' | 'formatData'
+  > {
+  /** 初始页码 */
+  initialPage?: number
 
+  /** 初始每页条数 */
+  initialPageSize?: number
+
+  /**
+   * page 变化时是否自动刷新
+   * 为 true 时会自动禁用 watchSource 的依赖自动收集（watchSource: true），
+   * 避免 page/pageSize 变化时重复请求；显式传入 watchSource: Ref[] 仍会保留
+   * @default true
+   */
+  pageWatch?: boolean
+
+  /** pageSize 变化时是否重置 page @default true */
+  resetPageWhenPageSizeChange?: boolean
+
+  /** 分页参数序列化，用于适配后端不同的字段名 */
+  paginationSerializer?: (page: number, pageSize: number) => Partial<TParams[0]>
+
+  /** 从 server 返回数据中提取 list 和 total */
+  dataSerializer: (data: TData, params: TParams) => PaginationData<TItem>
+
+  /** 格式化列表项，total 保持不变 */
+  formatList?: (list: TItem[], rawData: TData, params: TParams) => TFormatData[]
+}
+
+/**
+ * 分页返回值
+ */
 export interface PaginationResult<
   TData = any,
-  TParams extends any[] = any[],
+  TParams extends [Record<string, any>] = [Record<string, any>],
   TItem = any,
-> extends Omit<RequestResult<TData, TParams>, 'run'> {
-  /**
-   * 手动触发分页请求（当 manual: true 时使用）
-   * 自动注入当前 page/pageSize，返回 Promise 支持 await
-   */
-  run: () => Promise<void>
-
+  TFormatData = TItem,
+> extends RequestResult<
+    TData,
+    TParams,
+    PaginationData<TItem>,
+    PaginationData<TFormatData>
+  > {
   /** 当前列表数据 */
-  list: ComputedRef<TItem[]>
+  list: ComputedRef<TFormatData[]>
 
   /** 当前页码（可写） */
   page: Ref<number>
@@ -118,9 +80,6 @@ export interface PaginationResult<
   /** 是否已是最后一页 */
   isLastPage: ComputedRef<boolean>
 
-  /** 是否还有更多数据 */
-  hasMore: ComputedRef<boolean>
-
-  /** 加载下一页 */
-  loadMore: () => void
+  /** 重置到第一页 */
+  reset: () => void
 }

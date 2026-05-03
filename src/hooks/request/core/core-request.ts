@@ -9,17 +9,15 @@ import useThrottle from '../../throttle'
 export default function useCoreRequest<
   TData = any,
   TParams extends any[] = any[],
-  TFormatData = TData,
+  TSerialized = TData,
+  TFormatData = TSerialized,
 >(
-  {
-    setState,
-    rawState,
-    data,
-  }: ReturnType<typeof useCoreState<TData, TParams, TFormatData>>,
+  state: ReturnType<typeof useCoreState<TData, TParams, TSerialized, TFormatData>>,
   service: RequestServiceFn<TData, TParams>,
-  options: RequestOptions<TData, TParams, TFormatData> = {},
-  runPluginHooks: ReturnType<typeof usePlugins<TData, TParams, TFormatData>>['runPluginHooks'],
+  options: RequestOptions<TData, TParams, TSerialized, TFormatData> = {},
+  runPluginHooks: ReturnType<typeof usePlugins<TData, TParams, TSerialized, TFormatData>>['runPluginHooks'],
 ) {
+  const { data, setState, rawState } = state
   const {
     ready = ref(true),
     debounceWait = 500,
@@ -34,76 +32,62 @@ export default function useCoreRequest<
     onError,
     onSuccess,
     onFinallyFetchDone,
+    throwOnError = false,
+    dataSerializer,
     formatData,
   } = options
 
   let count = 0
-  let isCancelled = false
+  let cancelledCount = 0
+
+  const serviceWrapper = (...params: TParams): Promise<TData> => service(...params)
 
   const coreRequest = async (...args: TParams): Promise<TFormatData | undefined> => {
-    setTimeout(() => {
-      onBefore?.(args)
-    }, 0)
-    const beforeReturn = runPluginHooks('onBefore', args)
+    setTimeout(() => onBefore?.(args), 0)
 
-    if (beforeReturn && beforeReturn.isReturned) {
+    const beforeReturn = runPluginHooks('onBefore', args)
+    if (beforeReturn?.isReturned) {
       setState({ loading: false, finished: true })
       return
     }
 
-    count += 1
-    const currentCount = count
-
-    setState({
-      params: args,
-      finished: false,
-    })
+    const currentCount = ++count
+    setState({ params: args, finished: false })
 
     try {
-      // service 直接返回 Promise<TData>，出错就 throw/reject
-      const serviceWrapper = (...params: TParams): Promise<TData> => {
-        return service(...params)
-      }
-
       const { servicePromise } = runPluginHooks('onRequest', serviceWrapper, args)
       const result = await (servicePromise || serviceWrapper(...args))
 
-      // 当连续请求的时候，最后一个服务请求完之后
       if (currentCount === count) {
         setState({ finished: true })
         onFinallyFetchDone?.(args)
         runPluginHooks('onFinallyFetchDone', args)
       }
 
-      // 取消请求
-      if (isCancelled) {
-        if (currentCount === count)
-          isCancelled = false
+      if (currentCount <= cancelledCount)
         return data.value
-      }
 
-      // 格式化数据
-      const finalData = (formatData ? formatData(result, args) : result) as TFormatData
+      const extracted = (dataSerializer ? dataSerializer(result, args) : result) as TSerialized
+      const finalData = (formatData ? formatData(extracted, result, args) : extracted) as TFormatData
 
-      setState({ data: finalData, error: undefined })
-      onSuccess?.(finalData, args)
-      runPluginHooks('onSuccess', finalData, args)
+      setState({ data: finalData, rawData: result, error: undefined })
+      onSuccess?.(finalData, result, args)
+      runPluginHooks('onSuccess', finalData, result, args)
 
       return finalData
     }
     catch (e) {
-      // service throw 或 reject 时落到这里
-      if (isCancelled) {
-        if (currentCount === count)
-          isCancelled = false
+      if (currentCount <= cancelledCount)
         return data.value
-      }
 
       setState({ error: e, finished: true })
       onError?.(e, args)
       runPluginHooks('onError', e, args)
 
-      return Promise.reject(e)
+      if (throwOnError)
+        return Promise.reject(e)
+
+      return data.value
     }
     finally {
       onFinally?.(args)
@@ -112,8 +96,7 @@ export default function useCoreRequest<
   }
 
   const run = async (...args: TParams) => {
-    if (!ready.value)
-      return
+    if (!ready.value) return
     return coreRequest(...args)
   }
 
@@ -122,12 +105,9 @@ export default function useCoreRequest<
     return run(...rawState.params)
   }
 
-  // 取消请求
   const cancel = () => {
-    isCancelled = true
-    setState({
-      loading: false,
-    })
+    cancelledCount = count
+    setState({ loading: false })
     runPluginHooks('onCancel')
   }
 
@@ -138,11 +118,18 @@ export default function useCoreRequest<
     runPluginHooks('onMutate', data)
   }
 
+  // 始终以 reject 方式运行，不受 throwOnError 影响
+  const runForceReject = async (...args: TParams) => {
+    await coreRequest(...args)
+    if (rawState.error)
+      throw rawState.error
+  }
+
   // 乐观更新
   const optimisticUpdate = (newData: TFormatData | ((oldData: TFormatData) => TFormatData), params: TParams = rawState.params) => {
     const oldData = rawState.data
     mutate(newData)
-    run(...params).catch(() => {
+    runForceReject(...params).catch(() => {
       if (oldData !== undefined)
         mutate(oldData)
     })
