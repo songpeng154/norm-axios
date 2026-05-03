@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { useRequest } from '../../src/hooks'
 import { asyncAwait, withSetup } from '../utils.ts'
 
-describe('useRequest 生命周期', () => {
+describe('useRequest 生命周期回调', () => {
   it('onSuccess 在请求成功时触发', async () => {
     let result: any = null
     const service = async () => {

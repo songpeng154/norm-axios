@@ -37,11 +37,11 @@ export function createPagination<
 
   return function <
     TData extends object,
-    TParams extends [Record<string, any>] = [Record<string, any>],
+    TParams extends Record<string, any> = Record<string, any>,
     TItem = ArrayElement<Get<TData, TListKey>>,
     TFormatData = TItem,
   >(
-    service: RequestServiceFn<TData, TParams>,
+    service: RequestServiceFn<TData, [TParams]>,
     options?: Omit<PaginationOptions<TData, TParams, TItem, TFormatData>, 'dataSerializer'>,
   ): PaginationResult<TData, TParams, TItem, TFormatData> {
     const _options = {

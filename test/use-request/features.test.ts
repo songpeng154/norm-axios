@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { clearCache, useRequest } from '../../src/hooks'
 import { asyncAwait, withSetup } from '../utils.ts'
 
-describe('useRequest -> cache 模块测试', () => {
+describe('useRequest 缓存', () => {
   it('数据同步与缓存命中 (SWR)', async () => {
     let callCount = 0
     const mockService = async (id: number): Promise<string> => {
@@ -140,5 +140,118 @@ describe('useRequest -> cache 模块测试', () => {
     await run()
     expect(data.value).toBe('Success')
     expect(callCount).toBe(2)
+  })
+})
+
+describe('useRequest 轮询', () => {
+  it('pollingInterval 大于 0 时自动轮询', async () => {
+    let callCount = 0
+    const service = async () => {
+      callCount++
+      return callCount
+    }
+
+    withSetup(() =>
+      useRequest(service, { pollingInterval: 80 }),
+    )
+
+    await asyncAwait(30)
+    expect(callCount).toBe(1)
+
+    await asyncAwait(100)
+    expect(callCount).toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('useRequest 防抖', () => {
+  it('debounceRun 在指定时间内只执行一次', async () => {
+    let callCount = 0
+    const service = async () => {
+      callCount++
+      return callCount
+    }
+
+    const [{ debounceRun }] = withSetup(() =>
+      useRequest(service, {
+        manual: true,
+        debounceWait: 100,
+      }),
+    )
+
+    debounceRun()
+    debounceRun()
+    debounceRun()
+
+    await asyncAwait(150)
+    expect(callCount).toBe(1)
+  })
+})
+
+describe('useRequest 节流', () => {
+  it('throttleRun 在指定时间内只执行一次', async () => {
+    let callCount = 0
+    const service = async () => {
+      callCount++
+      return callCount
+    }
+
+    const [{ throttleRun }] = withSetup(() =>
+      useRequest(service, {
+        manual: true,
+        throttleWait: 100,
+      }),
+    )
+
+    throttleRun()
+    throttleRun()
+    throttleRun()
+
+    await asyncAwait(50)
+    expect(callCount).toBe(1)
+  })
+})
+
+describe('useRequest 错误重试', () => {
+  it('errorRetryCount 指定重试次数', async () => {
+    let callCount = 0
+    const service = async () => {
+      callCount++
+      await asyncAwait(20)
+      if (callCount <= 2) throw new Error('fail')
+      return 'ok'
+    }
+
+    const [{ data, error }] = withSetup(() =>
+      useRequest(service, {
+        errorRetryCount: 3,
+        errorRetryInterval: 10,
+      }),
+    )
+
+    await asyncAwait(300)
+    expect(callCount).toBe(3)
+    expect(data.value).toBe('ok')
+    expect(error.value).toBeUndefined()
+  })
+
+  it('超过重试次数后 error 被设置', async () => {
+    let callCount = 0
+    const service = async () => {
+      callCount++
+      await asyncAwait(20)
+      throw new Error('always fail')
+    }
+
+    const [{ error }] = withSetup(() =>
+      useRequest(service, {
+        errorRetryCount: 2,
+        errorRetryInterval: 10,
+      }),
+    )
+
+    await asyncAwait(300)
+    // 初始 1 次 + 重试 2 次 = 3 次
+    expect(callCount).toBe(3)
+    expect(error.value).toBeInstanceOf(Error)
   })
 })

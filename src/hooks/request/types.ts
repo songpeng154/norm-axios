@@ -205,7 +205,7 @@ export interface RequestOptions<
   /**
    * 请求成功时执行
    * @param data 响应数据（经过 formatData 处理后）
-   * @param rawData 原始响应数据（经过 dataSerializer 处理后，未经 formatData）
+   * @param rawData 原始响应数据
    * @param params 请求参数
    */
   onSuccess?: (

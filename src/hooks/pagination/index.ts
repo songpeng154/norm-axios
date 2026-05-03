@@ -5,22 +5,28 @@ import { useRequest } from '../request'
 
 export function usePagination<
   TData = any,
-  TParams extends [Record<string, any>] = [Record<string, any>],
+  TParams extends Record<string, any> = Record<string, any>,
   TItem = any,
   TFormatData = TItem,
 >(
-  service: RequestServiceFn<TData, TParams>,
+  service: RequestServiceFn<TData, [TParams]>,
   options: PaginationOptions<TData, TParams, TItem, TFormatData>,
 ): PaginationResult<TData, TParams, TItem, TFormatData> {
   const {
     dataSerializer,
     formatList,
-    paginationSerializer = (page, pageSize) => ({ page, pageSize } as Partial<TParams[0]>),
+    paginationSerializer = (page, pageSize) => ({ page, pageSize } as unknown as Partial<TParams>),
     initialPage = 1,
     initialPageSize = 10,
     pageWatch = true,
     resetPageWhenPageSizeChange = true,
     watchSource,
+    defaultParams,
+    onBefore,
+    onSuccess,
+    onError,
+    onFinally,
+    onFinallyFetchDone,
     ...restOptions
   } = options
 
@@ -28,31 +34,62 @@ export function usePagination<
   const page = ref(initialPage)
   const pageSize = ref(initialPageSize)
 
+  // ─── 构建默认参数 ─────────────────────────────────────────
+  const paginationDefaults = paginationSerializer(page.value, pageSize.value)
+  const effectiveDefaultParams = defaultParams
+    ? { ...defaultParams, ...paginationDefaults }
+    : paginationDefaults as TParams
+
   // ─── 包装 service，注入分页参数 ───────────────────────────
-  const wrappedService = (...args: TParams) => {
-    const [firstArg] = args
+  const wrappedService = (params: TParams) => {
     const paginationArg = paginationSerializer(page.value, pageSize.value)
-    const mergedArg = { ...firstArg, ...paginationArg }
-    return service(...[mergedArg] as unknown as TParams)
+    const mergedArg = { ...params, ...paginationArg }
+    return service(mergedArg)
   }
 
   // ─── formatList → formatData ─────────────────────────────
   const formatData = formatList
-    ? (data: PaginationData<TItem>, rawData: TData, params: TParams): PaginationData<TFormatData> => ({
-        list: formatList(data.list, rawData, params),
+    ? (data: PaginationData<TItem>, rawData: TData, params: [TParams]): PaginationData<TFormatData> => ({
+        list: formatList(data.list, rawData, params[0]),
         total: data.total,
       })
     : undefined
 
+  // ─── 包装回调，将元组参数转换为对象 ─────────────────────────
+  const wrappedOnBefore = onBefore
+    ? (params: [TParams]) => onBefore(params[0])
+    : undefined
+
+  const wrappedOnSuccess = onSuccess
+    ? (data: PaginationData<TFormatData>, rawData: TData, params: [TParams]) => onSuccess(data, rawData, params[0])
+    : undefined
+
+  const wrappedOnError = onError
+    ? (error: any, params: [TParams]) => onError(error, params[0])
+    : undefined
+
+  const wrappedOnFinally = onFinally
+    ? (params: [TParams]) => onFinally(params[0])
+    : undefined
+
+  const wrappedOnFinallyFetchDone = onFinallyFetchDone
+    ? (params: [TParams]) => onFinallyFetchDone(params[0])
+    : undefined
+
   // ─── 调用 useRequest ──────────────────────────────────────
-  const fetchInstance = useRequest<TData, TParams, PaginationData<TItem>, PaginationData<TFormatData>>(
+  const fetchInstance = useRequest<TData, [TParams], PaginationData<TItem>, PaginationData<TFormatData>>(
     wrappedService,
     {
       ...restOptions,
-      manual: true,
+      defaultParams: [effectiveDefaultParams],
       watchSource: pageWatch && watchSource === true ? undefined : watchSource,
-      dataSerializer,
+      dataSerializer: dataSerializer as any,
       formatData,
+      onBefore: wrappedOnBefore,
+      onSuccess: wrappedOnSuccess,
+      onError: wrappedOnError,
+      onFinally: wrappedOnFinally,
+      onFinallyFetchDone: wrappedOnFinallyFetchDone,
     },
   )
 
@@ -65,6 +102,17 @@ export function usePagination<
   const total = computed(() => paginationData.value.total)
   const totalPage = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
   const isLastPage = computed(() => page.value >= totalPage.value)
+
+  // ─── 覆盖 params 类型 ─────────────────────────────────────
+  const params = computed(() => fetchInstance.params.value[0]) as any
+
+  // ─── 包装 optimisticUpdate，将元组参数转换为对象 ────────────
+  const optimisticUpdate = (
+    newData: PaginationData<TFormatData> | ((oldData: PaginationData<TFormatData>) => PaginationData<TFormatData>),
+    params?: TParams,
+  ) => {
+    fetchInstance.optimisticUpdate(newData as any, params ? [params] : undefined)
+  }
 
   watch(page, () => {
     if (pageWatch)
@@ -86,6 +134,8 @@ export function usePagination<
   // ─── 返回值 ───────────────────────────────────────────────
   return {
     ...fetchInstance,
+    params,
+    optimisticUpdate,
     list,
     page,
     pageSize,

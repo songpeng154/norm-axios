@@ -1,18 +1,66 @@
 import { describe, expect, it } from 'vitest'
 import { useRequest } from '../../src/hooks'
 import { asyncAwait, withSetup } from '../utils.ts'
+import { ApiResponse, UserInfo } from './helpers.ts'
 
-interface ApiResponse<T = any> {
-  code: number
-  message: string
-  data: T
-}
+describe('useRequest 数据突变', () => {
+  it('mutate 直接修改 data', async () => {
+    const service = async () => {
+      await asyncAwait(20)
+      return { name: 'Alice' }
+    }
 
-interface UserInfo {
-  id: number
-  name: string
-  email: string
-}
+    const [{ data, mutate }] = withSetup(() => useRequest(service))
+    await asyncAwait(100)
+    expect(data.value).toEqual({ name: 'Alice' })
+
+    mutate({ name: 'Bob' })
+    expect(data.value).toEqual({ name: 'Bob' })
+  })
+
+  it('mutate 支持函数式更新', async () => {
+    const service = async () => {
+      await asyncAwait(20)
+      return { count: 1 }
+    }
+
+    const [{ data, mutate }] = withSetup(() => useRequest(service))
+    await asyncAwait(100)
+
+    mutate(old => ({ count: old!.count + 1 }))
+    expect(data.value).toEqual({ count: 2 })
+  })
+})
+
+describe('useRequest 乐观更新', () => {
+  it('optimisticUpdate 立即更新 data，请求失败后还原', async () => {
+    let shouldFail = false
+    const service = async (name: string) => {
+      await asyncAwait(30)
+      if (shouldFail) throw new Error('fail')
+      return { name }
+    }
+
+    const [{ data, run, optimisticUpdate, error }] = withSetup(() =>
+      useRequest(service, { manual: true }),
+    )
+
+    // 先成功一次，设置初始数据
+    await run('Alice')
+    await asyncAwait(50)
+    expect(data.value).toEqual({ name: 'Alice' })
+
+    // 乐观更新：立即生效
+    shouldFail = true
+    optimisticUpdate({ name: 'Bob' })
+    expect(data.value).toEqual({ name: 'Bob' })
+
+    // 请求失败后自动还原
+    await asyncAwait(100)
+    expect(error.value).toBeInstanceOf(Error)
+    expect(data.value).toEqual({ name: 'Alice' })
+  })
+})
 
 describe('useRequest rawData', () => {
   it('初始状态 rawData 为 undefined', async () => {
@@ -43,7 +91,7 @@ describe('useRequest rawData', () => {
     expect(rawData.value).toBe(data.value)
   })
 
-  it('仅使用 dataSerializer 时，rawData 与 data 相同', async () => {
+  it('仅使用 dataSerializer 时，rawData 是 service 返回的原始数据', async () => {
     const service = async (): Promise<ApiResponse<UserInfo>> => {
       await asyncAwait(20)
       return {
@@ -60,9 +108,14 @@ describe('useRequest rawData', () => {
     )
 
     await asyncAwait(100)
-    expect(rawData.value).toEqual({ id: 1, name: 'Alice', email: 'alice@example.com' })
+    // rawData 是 service 返回的原始数据
+    expect(rawData.value).toEqual({
+      code: 0,
+      message: 'success',
+      data: { id: 1, name: 'Alice', email: 'alice@example.com' },
+    })
+    // data 是 dataSerializer 处理后的数据
     expect(data.value).toEqual({ id: 1, name: 'Alice', email: 'alice@example.com' })
-    expect(rawData.value).toBe(data.value)
   })
 
   it('仅使用 formatData 时，rawData 是原始数据', async () => {
@@ -84,7 +137,7 @@ describe('useRequest rawData', () => {
     expect(data.value).toBe('Name: Alice')
   })
 
-  it('同时使用 dataSerializer 和 formatData 时，rawData 是 dataSerializer 之后的数据', async () => {
+  it('同时使用 dataSerializer 和 formatData 时，rawData 是 service 返回的原始数据', async () => {
     const service = async (): Promise<ApiResponse<UserInfo>> => {
       await asyncAwait(20)
       return {
@@ -102,8 +155,12 @@ describe('useRequest rawData', () => {
     )
 
     await asyncAwait(100)
-    // rawData 是 dataSerializer 处理后的数据（UserInfo）
-    expect(rawData.value).toEqual({ id: 1, name: 'Alice', email: 'alice@example.com' })
+    // rawData 是 service 返回的原始数据
+    expect(rawData.value).toEqual({
+      code: 0,
+      message: 'success',
+      data: { id: 1, name: 'Alice', email: 'alice@example.com' },
+    })
     // data 是 formatData 处理后的数据（string）
     expect(data.value).toBe('Name: Alice, Email: alice@example.com')
   })
@@ -136,7 +193,7 @@ describe('useRequest rawData', () => {
     expect(error.value).toBeInstanceOf(Error)
   })
 
-  it('dataSerializer 返回不同类型时 rawData 类型正确', async () => {
+  it('dataSerializer 返回不同类型时 rawData 是 service 返回的原始数据', async () => {
     interface RawResponse {
       list: number[]
       total: number
@@ -155,8 +212,8 @@ describe('useRequest rawData', () => {
     )
 
     await asyncAwait(100)
-    // rawData 是 dataSerializer 返回的 number[]
-    expect(rawData.value).toEqual([1, 2, 3])
+    // rawData 是 service 返回的原始数据
+    expect(rawData.value).toEqual({ list: [1, 2, 3], total: 3 })
     // data 是 formatData 返回的 number[]
     expect(data.value).toEqual([10, 20, 30])
   })

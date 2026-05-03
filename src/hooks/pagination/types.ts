@@ -1,4 +1,6 @@
+import type { DebouncedFunction } from 'es-toolkit'
 import type { ComputedRef, Ref } from 'vue'
+import type { Undefinable } from '../../types/utils.ts'
 import type { RequestOptions, RequestResult } from '../request/types.ts'
 
 /**
@@ -14,12 +16,13 @@ export interface PaginationData<TItem = any> {
  */
 export interface PaginationOptions<
   TData = any,
-  TParams extends [Record<string, any>] = [Record<string, any>],
+  TParams extends Record<string, any> = Record<string, any>,
   TItem = any,
   TFormatData = TItem,
 > extends Omit<
-    RequestOptions<TData, TParams, PaginationData<TItem>, PaginationData<TFormatData>>,
-     'dataSerializer' | 'formatData'
+    RequestOptions<TData, [TParams], PaginationData<TItem>, PaginationData<TFormatData>>,
+    'dataSerializer' | 'formatData' | 'defaultParams'
+    | 'onSuccess' | 'onError' | 'onBefore' | 'onFinally' | 'onFinallyFetchDone'
   > {
   /** 初始页码 */
   initialPage?: number
@@ -38,14 +41,39 @@ export interface PaginationOptions<
   /** pageSize 变化时是否重置 page @default true */
   resetPageWhenPageSizeChange?: boolean
 
+  /** 默认参数，直接传对象即可 */
+  defaultParams?: TParams
+
   /** 分页参数序列化，用于适配后端不同的字段名 */
-  paginationSerializer?: (page: number, pageSize: number) => Partial<TParams[0]>
+  paginationSerializer?: (page: number, pageSize: number) => Partial<TParams>
 
   /** 从 server 返回数据中提取 list 和 total */
   dataSerializer: (data: TData, params: TParams) => PaginationData<TItem>
 
   /** 格式化列表项，total 保持不变 */
   formatList?: (list: TItem[], rawData: TData, params: TParams) => TFormatData[]
+
+  /** 请求之前执行 */
+  onBefore?: (params: TParams) => void
+
+  /** 请求成功时执行 */
+  onSuccess?: (
+    data: PaginationData<TFormatData>,
+    rawData: TData,
+    params: TParams,
+  ) => void
+
+  /** 请求错误的时候执行 */
+  onError?: (
+    error: any,
+    params: TParams,
+  ) => void
+
+  /** 最后执行，不管 service 成功失败都会执行 */
+  onFinally?: (params: TParams) => void
+
+  /** 当连续请求的时候，最后一个服务请求完成之后触发 */
+  onFinallyFetchDone?: (params: TParams) => void
 }
 
 /**
@@ -53,15 +81,36 @@ export interface PaginationOptions<
  */
 export interface PaginationResult<
   TData = any,
-  TParams extends [Record<string, any>] = [Record<string, any>],
+  TParams extends Record<string, any> = Record<string, any>,
   TItem = any,
   TFormatData = TItem,
-> extends RequestResult<
-    TData,
-    TParams,
-    PaginationData<TItem>,
-    PaginationData<TFormatData>
+> extends Omit<
+    RequestResult<
+      TData,
+      [TParams],
+      PaginationData<TItem>,
+      PaginationData<TFormatData>
+    >,
+    'params' | 'run' | 'debounceRun' | 'throttleRun' | 'optimisticUpdate'
   > {
+  /** 当前请求参数 */
+  params: ComputedRef<TParams>
+
+  /** 手动触发 service 执行 */
+  run: (params: TParams) => Promise<Undefinable<PaginationData<TFormatData>>>
+
+  /** 与 run 用法一致，带防抖 */
+  debounceRun: DebouncedFunction<(params: TParams) => Promise<Undefinable<PaginationData<TFormatData>>>>
+
+  /** 与 run 用法一致，带节流 */
+  throttleRun: DebouncedFunction<(params: TParams) => Promise<Undefinable<PaginationData<TFormatData>>>>
+
+  /** 乐观更新 */
+  optimisticUpdate: (
+    newData: PaginationData<TFormatData> | ((oldData: PaginationData<TFormatData>) => PaginationData<TFormatData>),
+    params?: TParams,
+  ) => void
+
   /** 当前列表数据 */
   list: ComputedRef<TFormatData[]>
 
