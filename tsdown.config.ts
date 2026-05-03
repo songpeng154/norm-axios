@@ -5,5 +5,6 @@ export default defineConfig({
   format: ['cjs', 'esm'],
   outDir: 'dist',
   clean: true,
+  minify: true,
   dts: true,
 })
