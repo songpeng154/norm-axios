@@ -15,7 +15,7 @@
     "lint:fix": "eslint . --fix",
     "lint-staged": "lint-staged",
     "type-check": "pnpm -C packages/vue-rex type-check",
-    "publish": "pnpm -C packages/vue-rex publish"
+    "publish": "pnpm -C packages/vue-rex publish --access public"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.19.0",
