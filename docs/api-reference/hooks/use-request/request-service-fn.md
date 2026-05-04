@@ -2,32 +2,27 @@
 outline: deep
 ---
 
-[useRequest](./home) / **RequestServiceFn**
+[createRequest](./home) / **RequestServiceFn**
 
 # 类型：RequestServiceFn
 
-[useRequest](./home.md)的服务函数类型
+[createRequest](./home.md)返回的工厂函数的 service 参数类型
 
 ## 类型声明
 
 ```typescript
 export type RequestServiceFn<
-  // 数据
   TData = any,
-  // 方法参数
   TParams extends any[] = any[],
-  // 原始数据
-  TRawData extends Recordable = any,
-> = (...args: TParams) => Promise<ResponseContent<TData, TRawData>>
+> = (...args: TParams) => Promise<TData>
 ```
 
 ## 泛型
 
-| 名称         | 默认值     | 继承                    | 可选  | 描述     |
-|:-----------|:--------|:----------------------|:----|--------|
-| `TData`    | `any`   |                       | `是` | 数据类型   |
-| `TParams`  | `any[]` | `any[]`               | `是` | 函数入参类型 |
-| `TRawData` | `any`   | `Record<string, any>` | `是` | 原始数据类型 |
+| 名称       | 默认值     | 继承      | 可选  | 描述     |
+|:---------|:--------|:--------|:----|--------|
+| `TData`  | `any`   |         | `是` | 数据类型   |
+| `TParams` | `any[]` | `any[]` | `是` | 函数入参类型 |
 
 ## 入参
 
@@ -37,6 +32,6 @@ export type RequestServiceFn<
 
 ## 返回值
 
-[Promise<ResponseContent<TData, TRawData>>](/api-reference/common-type/response-content)
+`Promise<TData>`
 
-
+> service 函数直接返回 `Promise<TData>`，出错时 throw / reject 即可，不再需要 `ResponseContent` 封装层。

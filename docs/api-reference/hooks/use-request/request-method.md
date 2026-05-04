@@ -2,40 +2,44 @@
 outline: deep
 ---
 
-[useRequest](./home) / **RequestMethod**
+[createRequest](./home) / **RequestMethod**
 
 # 接口：RequestMethod
 
-`RequestState` 是 [useRequest](./home.md) 返回的方法类型。
+`RequestMethod` 是 [createRequest](./home.md) 返回的方法类型。
 
 ## 类型声明
 
 ```typescript
+import type { DebouncedFunction } from 'es-toolkit'
+
 export interface RequestMethod<
   // 数据
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
+  TFormatData = TSerialized,
 > {
   /**
-   * 手动触发 service 执行，参数会传递给 service。异常自动处理，通过 onError 反馈或者使用run.catch() 进行反馈
-   * @param args 请求参数
+   * 手动触发 service 执行。异常通过 onError 反馈，或者 await run(...).catch() 捕获
    */
   run: (...args: TParams) => Promise<Undefinable<TFormatData>>
 
   /**
-   * 与 run 用法一致，加了防抖功能
-   * @param args 请求参数
+   * 与 run 用法一致，带防抖
    */
-  debounceRun: DebouncedFunction<(...args: TParams) => Promise<Undefinable<TFormatData>>>
+  debounceRun: DebouncedFunction<
+    (...args: TParams) => Promise<Undefinable<TFormatData>>
+  >
 
   /**
-   * 与 run 用法一致，加了节流功能
-   * @param args 请求参数
+   * 与 run 用法一致，带节流
    */
-  throttleRun: DebouncedFunction<(...args: TParams) => Promise<Undefinable<TFormatData>>>
+  throttleRun: DebouncedFunction<
+    (...args: TParams) => Promise<Undefinable<TFormatData>>
+  >
 
   /**
    * 使用上次的 params，重新调用 run
@@ -43,23 +47,20 @@ export interface RequestMethod<
   refresh: () => Promise<Undefinable<TFormatData>>
 
   /**
-   * 手动取消当前正在进行中的请求
-   * 不是真正的取消请求，已发出的请求后台还是会接受到的
-   * 该方法只是取消了 data、response 的赋值以及 loading 重置为 false
+   * 手动取消当前正在进行中的请求（伪取消）
    */
   cancel: () => void
 
   /**
-   * 更改 data 数据,不会更改 rawData 和 response 中的数据
+   * 突变，立即更改 data 数据
    */
-  mutate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData),) => void
+  mutate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData)) => void
 
   /**
-   * 乐观更新,立即更改 data 数据，并且自动在背后发起请求
-   * 如果更新失败，则会还原到更新之前的数据
-   * 不会更改 rawData 和 response 中的数据
+   * 乐观更新，立即更改 data 数据并在背后发起请求
+   * 如果请求失败，自动还原到更新之前的数据
    */
-  optimisticUpdate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData), params: TParams) => void
+  optimisticUpdate: (newData: TFormatData | ((oldData: TFormatData) => TFormatData), params?: TParams) => void
 }
 ```
 
@@ -69,15 +70,15 @@ export interface RequestMethod<
 |:--------------|:--------|:--------|:----|-----------|
 | `TData`       | `any`   |         | `是` | 数据类型      |
 | `TParams`     | `any[]` | `any[]` | `是` | 函数入参类型    |
-| `TFormatData` | `TData` |         | `是` | 格式化数据后的类型 |
-| `TRawData`    | `any`   |         | `是` | 原始数据类型    |
+| `TSerialized` | `TData` |         | `是` | 序列化后的数据类型 |
+| `TFormatData` | `TSerialized` |    | `是` | 格式化数据后的类型 |
 
 ## 方法
 
 ### run
 
-手动触发 [service](request-service-fn) 执行，参数会传递给 [service](request-service-fn)
-。异常自动处理，通过 [onError](./request-options#onError) 反馈或者使用`run.catch()`进行反馈
+手动触发 [service](request-service-fn) 执行，参数会传递给 [service](request-service-fn)。
+异常通过 [onError](./request-options#onError) 反馈或者使用 `run(...).catch()` 进行反馈。
 
 #### 入参
 
@@ -91,7 +92,7 @@ export interface RequestMethod<
 
 ### debounceRun
 
-与 [run](#run) 用法一致，加了防抖功能
+与 [run](#run) 用法一致，带防抖功能
 
 #### 入参
 
@@ -105,7 +106,7 @@ export interface RequestMethod<
 
 ### throttleRun
 
-与 [run](#run) 用法一致，加了节流功能
+与 [run](#run) 用法一致，带节流功能
 
 #### 入参
 
@@ -127,11 +128,9 @@ export interface RequestMethod<
 
 ### cancel
 
-手动取消当前正在进行中的请求。
+手动取消当前正在进行中的请求（伪取消）。
 
-不是真正的取消请求，已发出的请求后台还是会接受到的。
-
-该方法只是取消了 `data`、`response` 的赋值以及 `loading` 重置为 `false`
+已发出的请求后台仍会接收到，该方法只是取消了 `data` 的赋值以及 `loading` 重置为 `false`。
 
 #### 返回值
 
@@ -139,17 +138,13 @@ export interface RequestMethod<
 
 ### mutate
 
-手动取消当前正在进行中的请求。
-
-不是真正的取消请求，已发出的请求后台还是会接受到的。
-
-该方法只是取消了 `data`、`response` 的赋值以及 `loading` 重置为 `false`
+突变，立即更改 `data` 数据。
 
 #### 入参
 
 | 名称        | 类型                                                      | 默认值 | 描述  |
 |:----------|:--------------------------------------------------------|:----|:----|
-| `newData` | `TFormatData \| ((oldData: TFormatData) => TFormatData` |     | 新数据 |
+| `newData` | `TFormatData \| ((oldData: TFormatData) => TFormatData)` |     | 新数据 |
 
 #### 返回值
 
@@ -157,18 +152,16 @@ export interface RequestMethod<
 
 ### optimisticUpdate
 
-乐观更新,立即更改 `data` 数据，并且自动在背后发起请求
+乐观更新，立即更改 `data` 数据，并且自动在背后发起请求。
 
-如果更新失败，则会还原到更新之前的数据
-
-不会更改 `rawData` 和 `response` 中的数据
+如果请求失败，自动还原到更新之前的数据。
 
 #### 入参
 
 | 名称        | 类型                                                      | 默认值 | 描述  |
 |:----------|:--------------------------------------------------------|:----|:----|
-| `newData` | `TFormatData \| ((oldData: TFormatData) => TFormatData` |     | 新数据 |
-| `params`  | `TParams`                                               |     | 入参  |
+| `newData` | `TFormatData \| ((oldData: TFormatData) => TFormatData)` |     | 新数据 |
+| `params`  | `TParams`                                               | 可选 | 入参  |
 
 #### 返回值
 

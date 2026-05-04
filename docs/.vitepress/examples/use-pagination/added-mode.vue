@@ -1,26 +1,21 @@
 <script setup lang="ts">
-import type { PaginationResponse, ResponseContent } from 'vue-rex'
-import { usePagination } from 'vue-rex'
+import { createPagination } from 'vue-rex'
+
+const usePage = createPagination({ listKey: 'data.list', totalKey: 'data.total' })
 
 const asyncAwait = async (millisecond: number) => new Promise(resolve => setTimeout(resolve, millisecond))
 
 // 获取假数据
-const getFakeData = async ({ page, pageSize }: { page: number, pageSize: number }): Promise<ResponseContent<PaginationResponse<number>>> => {
+const getFakeData = async ({ page, pageSize }: { page: number, pageSize: number }) => {
   const total = 50
   const start = (page - 1) * pageSize
   const end = Math.min(start + pageSize, total)
   const list = Array.from({ length: end - start }, (_, i) => start + i + 1)
   await asyncAwait(300)
-  return [
-    {
-      list,
-      total,
-    },
-    undefined,
-  ]
+  return { data: { list, total } }
 }
 
-const { list, page, pageSize, total, totalPage } = usePagination(getFakeData, {
+const { list, page, pageSize, total, totalPage } = usePage(getFakeData, {
   addedMode: true,
 })
 </script>

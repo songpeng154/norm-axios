@@ -1,49 +1,52 @@
 <script setup lang="ts">
-import type { ResponseContent } from 'vue-rex'
-import { useRequest } from 'vue-rex'
+import { createRequest } from 'vue-rex'
 import { ref } from 'vue'
 
-const asyncAwait = async (millisecond: number) => new Promise(resolve => setTimeout(resolve, millisecond))
+const useApi = createRequest({ dataKey: 'data' })
 
-// 获取假数据
-const getFakeData = async () => {
-  const responseContent: ResponseContent<number> = [undefined, { msg: '请求错误', code: 500 }]
-  await asyncAwait(1000)
-  return responseContent
+// 模拟一个会随机失败的接口
+const getData = async () => {
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  // 50% 概率失败
+  if (Math.random() > 0.5) throw new Error('服务器繁忙，请稍后重试')
+  return { data: `数据加载成功 @ ${new Date().toLocaleTimeString()}` }
 }
 
-const count = ref(0)
-const { loading } = useRequest(getFakeData, {
+const errorCount = ref(0)
+
+// errorRetryCount: 3 —— 失败后自动重试 3 次
+// errorRetryInterval: 1000 —— 每次重试间隔 1 秒
+const { data, loading, error } = useApi(getData, {
   errorRetryCount: 3,
-  errorRetryInterval: 500,
-  onError() {
-    count.value += 1
-  },
+  errorRetryInterval: 1000,
+  onError() { errorCount.value++ },
 })
 </script>
 
 <template>
   <div>
-    <p>loading:{{ loading }}</p>
-    <p>错误次数:{{ count }}</p>
+    <div v-if="loading" class="state-box loading">
+      ⏳ 请求中（失败会自动重试，最多 3 次）...
+      <br><small>错误次数：{{ errorCount }}</small>
+    </div>
+
+    <div v-else-if="error" class="state-box error">
+      ❌ 重试 3 次后仍然失败：{{ error.message }}
+      <br><small>总错误次数：{{ errorCount }}</small>
+    </div>
+
+    <div v-else class="state-box success">
+      ✅ {{ data }}
+      <br><small>请求成功！遇到失败时自动重试了 {{ errorCount }} 次</small>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-input {
-  background: var(--vp-c-bg-soft);
-  //border: none;
-  padding: 5px 15px;
-  border-radius: 4px;
-  margin-right: 10px;
-}
-
-button {
-  background: #5e7aeb;
-  color: white;
-  border: none;
-  padding: 5px 15px;
-  border-radius: 4px;
-  margin-right: 10px;
-}
+.demo-card { padding: 0; min-height: 80px; }
+.state-box { padding: 12px; border-radius: 6px; font-size: 14px; }
+.loading { background: var(--vp-c-bg-soft); }
+.error { background: #ffebee; color: #c62828; color: #d32f2f; }
+.success { background: var(--vp-c-brand-soft); }
+small { opacity: 0.7; }
 </style>

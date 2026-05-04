@@ -2,7 +2,7 @@
 outline: deep
 ---
 
-[useRequest](./home) / **RequestPluginImplement**
+[createRequest](./home) / **RequestPluginImplement**
 
 # 接口：RequestPluginImplement
 
@@ -16,14 +16,13 @@ export interface RequestPluginImplement<
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
-  // 原始数据
-  TRawData = any,
+  TFormatData = TSerialized,
 > {
   (
-    context: RequestContext<TData, TParams, TFormatData, TRawData>,
-  ): RequestPluginHooks<TData, TParams, TFormatData, TRawData> | void
+    context: RequestContext<TData, TParams, TSerialized, TFormatData>,
+  ): RequestPluginHooks<TData, TParams, TSerialized, TFormatData> | void
 }
 ```
 
@@ -33,16 +32,15 @@ export interface RequestPluginImplement<
 |:--------------|:--------|:--------|:----|-----------|
 | `TData`       | `any`   |         | `是` | 数据类型      |
 | `TParams`     | `any[]` | `any[]` | `是` | 函数入参类型    |
-| `TFormatData` | `TData` |         | `是` | 格式化数据后的类型 |
-| `TRawData`    | `any`   |         | `是` | 原始数据类型    |
+| `TSerialized` | `TData` |         | `是` | 序列化后的数据类型 |
+| `TFormatData` | `TSerialized` |    | `是` | 格式化数据后的类型 |
 
 ## 入参
 
-| 名称         | 类型                                                                      | 默认值 | 描述  |
-|:-----------|:------------------------------------------------------------------------|:----|:----|
-| `context`    | [RequestContext\<TData, TParams, TFormatData, TRawData>](./request-context) |     | 上下文 |
+| 名称      | 类型                                                                        | 默认值 | 描述  |
+|:--------|:--------------------------------------------------------------------------|:----|:----|
+| `context` | [RequestContext\<TData, TParams, TSerialized, TFormatData>](./request-context) |     | 上下文 |
 
 ### 返回值
 
-[RequestPluginHooks<TData, TParams, TFormatData, TRawData>](./request-plugin-hooks) | `void`
-
+[RequestPluginHooks<TData, TParams, TSerialized, TFormatData>](./request-plugin-hooks) | `void`

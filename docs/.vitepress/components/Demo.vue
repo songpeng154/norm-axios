@@ -53,9 +53,6 @@ onBeforeMount(async () => {
         <Example />
       </div>
       <div class="card-action">
-        <div>
-          <a v-if="runUrl" :href="runUrl">在线运行</a>
-        </div>
         <div class="card-action-icon-group">
           <div v-if="(!isCopySuccess && !isCopyFail)" class="icon i-ep:copy-document" @click="onCopy" />
           <div v-if="isCopySuccess" class="success">
@@ -92,7 +89,7 @@ onBeforeMount(async () => {
   &-action {
     padding: 12px;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     border-top: 1px solid var(--vp-c-divider);
     height: 40px;

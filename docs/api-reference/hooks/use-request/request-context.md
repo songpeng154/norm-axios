@@ -2,7 +2,7 @@
 outline: deep
 ---
 
-[useRequest](./home) / **RequestContext**
+[createRequest](./home) / **RequestContext**
 
 # 接口：RequestContext
 
@@ -13,28 +13,29 @@ outline: deep
 ## 类型声明
 
 ```typescript
+import { EffectScope } from 'vue'
+
 export interface RequestContext<
   // 数据
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
-  // 原始数据
-  TRawData = any,
-> extends RequestResult<TData, TParams, TFormatData, TRawData> {
+  TFormatData = TSerialized,
+> extends RequestResult<TData, TParams, TSerialized, TFormatData> {
   // 当前作用域
   scope: EffectScope
 
   // 配置项
-  options: RequestOptions<TData, TParams, TFormatData, TRawData>
+  options: RequestOptions<TData, TParams, TSerialized, TFormatData>
 
   // 原始 state
-  rawState: RequestState<TData, TParams, TFormatData, TRawData>
+  rawState: RequestState<TData, TParams, TSerialized, TFormatData>
 
   // 设置状态
   setState: (
-    state: Partial<RequestState<TData, TParams, TFormatData, TRawData>>,
+    state: Partial<RequestState<TData, TParams, TSerialized, TFormatData>>,
   ) => void
 }
 ```
@@ -45,8 +46,8 @@ export interface RequestContext<
 |:--------------|:--------|:--------|:----|-----------|
 | `TData`       | `any`   |         | `是` | 数据类型      |
 | `TParams`     | `any[]` | `any[]` | `是` | 函数入参类型    |
-| `TFormatData` | `TData` |         | `是` | 格式化数据后的类型 |
-| `TRawData`    | `any`   |         | `是` | 原始数据类型    |
+| `TSerialized` | `TData` |         | `是` | 序列化后的数据类型 |
+| `TFormatData` | `TSerialized` |    | `是` | 格式化数据后的类型 |
 
 ## 继承
 
@@ -62,13 +63,13 @@ export interface RequestContext<
 
 ### options
 
-* `可选` - [RequestOptions<TData, TParams, TFormatData, TRawData>](./request-options)
+* `可选` - [RequestOptions<TData, TParams, TSerialized, TFormatData>](./request-options)
 
 配置项
 
 ### rawState
 
-* `可选` -  [RequestState<TData, TParams, TFormatData, TRawData>](./request-state)
+* `可选` -  [RequestState<TData, TParams, TSerialized, TFormatData>](./request-state)
 
 原始 state
 
@@ -82,10 +83,8 @@ export interface RequestContext<
 
 | 名称      | 类型                                                                              | 默认值 | 描述  |
 |:--------|:--------------------------------------------------------------------------------|:----|:----|
-| `state` | [Partial\<RequestState<TData, TParams, TFormatData, TRawData>>](./request-state) | -   | 新状态 |
+| `state` | [Partial\<RequestState<TData, TParams, TSerialized, TFormatData>>](./request-state) | -   | 新状态 |
 
 #### 返回值
 
 `void`
-
-

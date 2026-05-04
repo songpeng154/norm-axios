@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import type { ResponseContent } from 'vue-rex'
-import { useRequest } from 'vue-rex'
+import { createRequest } from 'vue-rex'
 
-const asyncAwait = async (millisecond: number) => new Promise(resolve => setTimeout(resolve, millisecond))
+const useApi = createRequest({ dataKey: 'data' })
 
-// 获取假数据
-const getFakeData = async (b: boolean = false): Promise<ResponseContent<boolean>> => {
-  await asyncAwait(3000)
-  return typeof b === 'number' ? [undefined, { msg: '参数类型错误', code: 400 }] : [b, undefined]
+// 模拟点赞/取消点赞接口
+const toggleLike = async (shouldLike: boolean) => {
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  // 模拟：传入 number 时报错，演示请求失败自动回滚
+  if (typeof shouldLike === 'number') throw new Error('请求失败')
+  return { data: shouldLike }
 }
 
-const { data, loading, optimisticUpdate } = useRequest(getFakeData, {
+// optimisticUpdate：先立即更新 UI，背后发请求，失败则回滚
+const { data, loading, optimisticUpdate } = useApi(toggleLike, {
   manual: true,
   initialData: false,
 })
@@ -18,32 +20,27 @@ const { data, loading, optimisticUpdate } = useRequest(getFakeData, {
 
 <template>
   <div>
-    <p>是否已点赞：{{ data }}</p>
-    <p>loading：{{ loading }}</p>
-    <button @click="optimisticUpdate(true, [true])">
-      点个赞
-    </button>
-    <button @click="optimisticUpdate(true, [1])">
-      点个赞(模拟请求失败)
-    </button>
+    <div class="like-area">
+      <span class="status">
+        {{ loading ? '⏳ 提交中...' : data ? '❤️ 已点赞' : '🤍 未点赞' }}
+      </span>
+    </div>
+    <div class="actions">
+      <button @click="optimisticUpdate(true, [true])">点赞（模拟成功）</button>
+      <button class="fail" @click="optimisticUpdate(true, [1])">
+        点赞（模拟失败，自动回滚）
+      </button>
+    </div>
+    <p class="hint">第二个按钮传入错误类型，请求失败后 UI 自动回滚到之前的状态</p>
   </div>
 </template>
 
 <style lang="scss" scoped>
-input {
-  background: var(--vp-c-bg-soft);
-  //border: none;
-  padding: 5px 15px;
-  border-radius: 4px;
-  margin-right: 10px;
-}
-
-button {
-  background: #5e7aeb;
-  color: white;
-  border: none;
-  padding: 5px 15px;
-  border-radius: 4px;
-  margin-right: 10px;
-}
+.demo-card { padding: 0; }
+.like-area { margin-bottom: 12px; }
+.status { font-size: 18px; }
+.actions { display: flex; gap: 8px; margin-bottom: 8px; }
+button { background: #5e7aeb; color: #fff; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; }
+.fail { background: #e53935; }
+.hint { font-size: 13px; color: var(--vp-c-text-2); margin: 0; }
 </style>

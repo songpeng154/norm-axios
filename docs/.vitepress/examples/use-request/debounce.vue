@@ -1,40 +1,48 @@
 <script setup lang="ts">
-import type { ResponseContent } from 'vue-rex'
-import { useRequest } from 'vue-rex'
+import { createRequest } from 'vue-rex'
 import { ref } from 'vue'
 
-const asyncAwait = async (millisecond: number) => new Promise(resolve => setTimeout(resolve, millisecond))
+const useApi = createRequest({ dataKey: 'data' })
 
-// 获取假数据
-const getFakeData = async (): Promise<ResponseContent<number>> => {
-  await asyncAwait(500)
-
-  return [Date.now(), undefined]
+// 模拟搜索接口
+const searchUsers = async (keyword: string) => {
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  const all = ['张三', '李四', '王五', '张伟', '李娜']
+  const result = all.filter(n => n.includes(keyword || ''))
+  return { data: result }
 }
 
-const count = ref(0)
+const keyword = ref('')
+const requestCount = ref(0)
 
-const { data, debounceRun } = useRequest(getFakeData, {
-  onSuccess() {
-    count.value += 1
-  },
+// debounceWait: 300ms —— 用户停止输入 300ms 后才发起请求
+// debounceRun —— 带防抖的 run，高频调用只会执行最后一次
+const { data, debounceRun } = useApi(searchUsers, {
+  debounceWait: 300,
+  onSuccess() { requestCount.value++ },
 })
 </script>
 
 <template>
   <div>
-    <input placeholder="输入触发防抖请求" @input="debounceRun()">
-    <p>当前请求次数：{{ count }}</p>
-    <p>时间戳：{{ data }}</p>
+    <p class="desc">输入内容后停止 300ms 才真正发起请求，避免每次按键都请求</p>
+    <input
+      v-model="keyword"
+      placeholder="输入姓名，停止输入后自动搜索"
+      @input="debounceRun(keyword)"
+    >
+    <p class="hint">可查询：张三、李四、王五、张伟、李娜</p>
+    <div class="info">
+      <span>实际请求次数：<strong>{{ requestCount }}</strong></span>
+      <span v-if="data">结果：{{ data.join('、') }}</span>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-input {
-  background: var(--vp-c-bg-soft);
-  //border: none;
-  padding: 5px 15px;
-  border-radius: 4px;
-  margin-right: 10px;
-}
+.demo-card { padding: 0; }
+.desc { font-size: 13px; color: var(--vp-c-text-2); margin: 0 0 8px; }
+input { width: 100%; padding: 8px 12px; border: 1px solid var(--vp-c-divider); border-radius: 4px; background: var(--vp-c-bg-soft); box-sizing: border-box; }
+.hint { font-size: 12px; color: var(--vp-c-text-3); margin: 4px 0 0; }
+.info { margin-top: 10px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
 </style>

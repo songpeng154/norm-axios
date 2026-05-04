@@ -2,28 +2,24 @@
 outline: deep
 ---
 
-[useRequest](./home) / **RequestOptions**
+[createRequest](./home) / **RequestOptions**
 
 # 接口：RequestOptions
 
-`RequestState` 是 [useRequest](./home.md) 返回的数据状态类型。
+`RequestOptions` 是 [createRequest](./home.md) 返回的工厂函数的配置项类型。
 
 ## 类型声明
 
 ```typescript
-import type { any } from '请求'
-import type { EffectScope, MaybeRef, Ref, WatchSource } from 'vue'
-
-
 export interface RequestOptions<
   // 数据
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  // dataSerializer 返回的数据类型，未提供时等于 TData
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
-  // 原始数据
-  TRawData = any,
+  TFormatData = TSerialized,
 > {
   /**
    * data 初始的数据
@@ -138,12 +134,6 @@ export interface RequestOptions<
   pollingWhenDocumentHidden?: MaybeRef<boolean>
 
   /**
-   * 窗口失去焦点时进行轮询
-   * @default true
-   */
-  pollingWhenWindowBlur?: MaybeRef<boolean>
-
-  /**
    * 轮询错误重试次数。如果设置为 Infinity，则无限次
    * @default 3
    */
@@ -178,9 +168,29 @@ export interface RequestOptions<
   staleTime?: number
 
   /**
-   * 格式化数据
+   * 获取自定义缓存
    */
-  formatData?: (data: TData, params: TParams, response?: any<TRawData>) => TFormatData
+  getCache?: (cacheKey: string, params: TParams) => CachedData<TData, TParams, TSerialized, TFormatData>
+
+  /**
+   * 设置自定义缓存
+   */
+  setCache?: (cacheKey: string, cacheData: CachedData<TData, TParams, TSerialized, TFormatData>) => void
+
+  /**
+   * 从 service 返回的数据中提取真实数据
+   * 在 formatData 之前执行，用于解包响应体
+   *
+   * @example
+   * dataSerializer: (res) => res.data
+   */
+  dataSerializer?: (data: TData, params: TParams) => TSerialized
+
+  /**
+   * 格式化数据
+   * service resolve 后（经过 dataSerializer 提取后），对数据做二次处理
+   */
+  formatData?: (data: TSerialized, rawData: TData, params: TParams) => TFormatData
 
   /**
    * 请求之前执行
@@ -189,34 +199,46 @@ export interface RequestOptions<
   onBefore?: (params: TParams) => void
 
   /**
-   * promise resolve 的时候执行
-   * @param data 响应数据
+   * 请求成功时执行
+   * @param data 响应数据（经过 formatData 处理后）
+   * @param rawData 原始响应数据
    * @param params 请求参数
-   * @param response  请求响应内容
    */
   onSuccess?: (
     data: TFormatData,
+    rawData: TData,
     params: TParams,
-    response?: any<TRawData>,
   ) => void
 
   /**
-   * 请求错误的时候执行
+   * 请求错误的时候执行（service throw / reject 时触发）
    * @param error 错误信息
    * @param params 请求参数
-   * @param response  请求响应内容
    */
   onError?: (
-    error: ResponseError,
+    error: any,
     params: TParams,
-    response?: any<TRawData>,
   ) => void
 
   /**
-   * 最后执行,不管 service 成功失败都会执行
+   * 请求失败时是否抛出错误（reject promise）
+   * 默认 false，错误仅通过 onError 回调和 error 状态处理
+   * 设为 true 时，run() 返回 rejected promise，可配合 try/catch 或 Error Boundary 使用
+   * @default false
+   */
+  throwOnError?: boolean
+
+  /**
+   * 最后执行，不管 service 成功失败都会执行
    * @param params 参数
    */
   onFinally?: (params: TParams) => void
+
+  /**
+   * 当连续请求的时候，最后一个服务请求完成之后触发
+   * @param params
+   */
+  onFinallyFetchDone?: (params: TParams) => void
 }
 ```
 
@@ -224,10 +246,10 @@ export interface RequestOptions<
 
 | 名称            | 默认值     | 继承      | 可选  | 描述        |
 |:--------------|:--------|:--------|:----|-----------|
-| `TData`       | `any`   |         | `是` | 数据类型      |
+| `TData`       | `any`   |         | `是` | service 返回的数据类型 |
 | `TParams`     | `any[]` | `any[]` | `是` | 函数入参类型    |
-| `TFormatData` | `TData` |         | `是` | 格式化数据后的类型 |
-| `TRawData`    | `any`   |         | `是` | 原始数据类型    |
+| `TSerialized` | `TData` |         | `是` | dataSerializer 处理后的数据类型 |
+| `TFormatData` | `TSerialized` |    | `是` | 格式化数据后的类型 |
 
 ## 属性
 
@@ -414,7 +436,7 @@ export interface RequestOptions<
 
 #### 返回值
 
-[CachedData<TData, TParams, TFormatData, TRawData>](/api-reference/hooks/use-request/cached-data.md)
+[CachedData<TData, TParams, TSerialized, TFormatData>](/api-reference/hooks/use-request/cached-data.md)
 
 ### setCache
 
@@ -431,17 +453,32 @@ export interface RequestOptions<
 
 `void`
 
-### formatData
+### dataSerializer
 
-自定义数据格式化函数
+从 service 返回的数据中提取真实数据，在 `formatData` 之前执行
 
 #### 入参
 
-| 名称         | 类型                                     | 默认值 | 描述        |
-|:-----------|:---------------------------------------|:----|:----------|
-| `data`     | `TData`                                |     | 数据        |
-| `params`   | `TParams`                              |     | 入参        |
-| `response` | `any<TRawData> \| undefined` |     | 请求原始响应 |
+| 名称       | 类型        | 默认值 | 描述    |
+|:---------|:----------|:----|:------|
+| `data`   | `TData`   |     | service 返回的原始数据 |
+| `params` | `TParams` |     | 入参    |
+
+#### 返回值
+
+`TSerialized`
+
+### formatData
+
+格式化数据。service resolve 后（经过 [dataSerializer](#dataserializer) 提取后），对数据做二次处理
+
+#### 入参
+
+| 名称       | 类型                  | 默认值 | 描述        |
+|:---------|:--------------------|:----|:----------|
+| `data`   | `TSerialized`       |     | 序列化后的数据 |
+| `rawData`   | `TData`           |     | service 返回的原始数据 |
+| `params` | `TParams`            |     | 入参        |
 
 #### 返回值
 
@@ -467,11 +504,11 @@ export interface RequestOptions<
 
 #### 入参
 
-| 名称         | 类型                                     | 默认值 | 描述        |
-|:-----------|:---------------------------------------|:----|:----------|
-| `data`     | `TFormatData`                          |     | 数据        |
-| `params`   | `TParams`                              |     | 入参        |
-| `response` | `any<TRawData> \| undefined` |     | 请求原始响应 |
+| 名称       | 类型            | 默认值 | 描述        |
+|:---------|:--------------|:----|:----------|
+| `data`   | `TFormatData` |     | 响应数据（经过 formatData 处理后） |
+| `rawData`   | `TData`   |     | 原始响应数据 |
+| `params` | `TParams`     |     | 入参        |
 
 #### 返回值
 
@@ -479,19 +516,25 @@ export interface RequestOptions<
 
 ### onError
 
-请求失败回调
+请求失败回调（service throw / reject 时触发）
 
 #### 入参
 
-| 名称         | 类型                                                                       | 默认值 | 描述        |
-|:-----------|:-------------------------------------------------------------------------|:----|:----------|
-| `error`    | [ResponseError](/api-reference/common-type/response-error)               | -   | 错误信息      |
-| `params`   | `TParams`                                                                | -   | 入参        |
-| `response` | `any<TRawData>                                   \| undefined` | -   | 请求原始响应 |
+| 名称       | 类型        | 默认值 | 描述 |
+|:---------|:----------|:----|:---|
+| `error`  | `any`     |     | 错误信息 |
+| `params` | `TParams` |     | 入参 |
 
 #### 返回值
 
 `void`
+
+### throwOnError
+
+* `可选` - `boolean`
+* 默认值：`false`
+
+请求失败时是否抛出错误（reject promise）。默认 false，错误仅通过 [onError](#onerror) 回调和 [error](request-state#error) 状态处理。设为 true 时，`run()` 返回 rejected promise，可配合 try/catch 或 Error Boundary 使用。
 
 ### onFinally
 
@@ -520,49 +563,3 @@ export interface RequestOptions<
 #### 返回值
 
 `void`
-
-[//]: # ()
-
-[//]: # (### onMutate)
-
-[//]: # ()
-
-[//]: # (通过 [mutate]&#40;/api-reference/hooks/use-request/request-method.md#mutate&#41; 修改数据时触发)
-
-[//]: # ()
-
-[//]: # (#### 入参)
-
-[//]: # ()
-
-[//]: # (| 名称     | 类型            | 默认值 | 描述 |)
-
-[//]: # (|:-------|:--------------|:----|:---|)
-
-[//]: # (| `data` | `TFormatData` |     | 数据 |)
-
-[//]: # ()
-
-[//]: # (#### 返回值)
-
-[//]: # ()
-
-[//]: # (`void`)
-
-[//]: # ()
-
-[//]: # ()
-
-[//]: # (### onCancel)
-
-[//]: # ()
-
-[//]: # (通过 [cancel]&#40;/api-reference/hooks/use-request/request-method.md#cancel&#41; 取消请求时触发)
-
-[//]: # ()
-
-[//]: # (#### 返回值)
-
-[//]: # ()
-
-[//]: # (`void`)

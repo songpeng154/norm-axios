@@ -4,7 +4,11 @@ outline: deep
 
 # 快速开始
 
-本节介绍如何快速上手
+本节介绍如何快速上手。
+
+## 环境要求
+
+- **Vue >= 3.3**
 
 ## 安装
 
@@ -14,67 +18,64 @@ outline: deep
 npm install vue-rex
 ```
 
-```bash [yarn]
-yarn add vue-rex
-```
-
 ```bash [pnpm]
 pnpm add vue-rex
 ```
 
-```bash [bun]
-bun add vue-rex
+```bash [yarn]
+yarn add vue-rex
 ```
 
 :::
 
-## 浏览器直接引入
-
-直接通过浏览器的 `HTML` 标签导入 `vue-rex`，然后就可以使用全局变量 `VueRex` (包含所有 Hook) 了。
-
-根据不同的 CDN 提供商有不同的引入方式， 我们在这里以 `unpkg` 和 `jsDelivr` 举例。 你也可以使用其它的 CDN 供应商。
-
-### unpkg
-
-```html
-
-<head>
-    <!-- 导入 Vue 3 -->
-    <script src="//unpkg.com/vue@3"></script>
-    <!-- 导入 vue-rex -->
-    <script src="//unpkg.com/vue-rex"></script>
-</head>
-```
-
-### jsDelivr
-
-```html
-
-<head>
-    <!-- 导入 Vue 3 -->
-    <script src="//cdn.jsdelivr.net/npm/vue@3"></script>
-    <!-- 导入 vue-rex -->
-    <script src="//cdn.jsdelivr.net/npm/vue-rex"></script>
-</head>
-```
-
-## 示例
+## 基本用法
 
 ```vue
+<script setup lang="ts">
+import { createRequest } from 'vue-rex'
+
+// 创建请求实例
+const useApi = createRequest({ dataKey: 'data' })
+
+// 定义 service
+const getUserList = async () => {
+  const res = await fetch('/api/users')
+  return res.json() // { data: [...] }
+}
+
+// 组件中使用
+const { data, loading, error } = useApi(getUserList)
+</script>
+
 <template>
   <div>
     <div v-if="loading">加载中...</div>
-    <div v-if="error">请求出错：{{ error.msg }}</div>
-    <div v-if="data">数据: {{ data }}</div>
+    <div v-if="error">错误：{{ error.message }}</div>
+    <div v-if="data">
+      <div v-for="user in data" :key="user.id">
+        {{ user.name }}
+      </div>
+    </div>
   </div>
 </template>
+```
 
-<script lang="ts" setup>
-import { useRequest } from 'vue-rex'
+## 分页用法
 
-// service 约定返回 [data, error]
-const getInfo = () => Promise.resolve([{ name: 'Rex' }, undefined])
+```vue
+<script setup lang="ts">
+import { createPagination } from 'vue-rex'
 
-const { data, loading, error } = useRequest(getInfo)
+const usePage = createPagination({
+  listKey: 'data.records',
+  totalKey: 'data.total',
+})
+
+const getUserPage = async (params: { page: number; pageSize: number }) => {
+  const res = await fetch(`/api/users?page=${params.page}&size=${params.pageSize}`)
+  return res.json()
+}
+
+const { list, total, page, pageSize } = usePage(getUserPage)
 </script>
 ```

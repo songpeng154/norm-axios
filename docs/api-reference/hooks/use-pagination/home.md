@@ -2,44 +2,94 @@
 outline: deep
 ---
 
-# usePagination
+# createPagination
 
-`usePagination` 是基于 [useRequest](../use-request/home.md) 的分页请求 hook，用于处理分页数据请求
+`createPagination` 是基于 [createRequest](../use-request/home.md) 的分页请求 hook 工厂函数，用于处理分页数据请求。
 
-
+首先调用 `createPagination` 获取一个分页工厂函数，再调用该工厂函数发起分页请求。
 
 ::: warning 注意
-[service](./pagination-service-fn) 返回数据必须符合 [PaginationResponse](./pagination-response) 分页规范（字段名称必须有:`list`、`total`）。若服务数据格式不兼容，开发者需要封装格式转换函数，或在响应拦截器中强制规范数据格式。
+[service](./pagination-service-fn) 返回数据需通过 `dataSerializer` 提取符合分页规范的数据结构（字段名通过 `listKey`、`totalKey` 指定）。
 :::
 
 ## 特性
 
-* 支持[useRequest](../use-request/home.md)的全部功能
+* 支持 [createRequest](../use-request/home.md) 的全部功能
 * 自动管理分页状态
-* 无限滚动
-* `pageSize`变化后重置分页
+* pageSize 变化后重置分页
+* 响应式 page / pageSize
 
 ## 类型声明
 
 ```typescript
-function usePagination<
-  TData extends PaginationResponse = PaginationResponse,
-  TParams extends any[] = any[],
-  TFormatData extends PaginationResponse = TData,
-  TRawData = any>
-(
-  service: PaginationServiceFn<TData, TRawData>,
-  options?: PaginationAndFetchOptions<TData, TParams, TFormatData, TRawData>,
-): PaginationResult<TData, TParams, TFormatData, TRawData>;
+function createPagination<
+  TListKey extends string = string,
+  TTotalKey extends string = string,
+>(
+  config: CreatePaginationConfig<TListKey, TTotalKey>
+)
+```
+
+### CreatePaginationConfig
+
+```typescript
+interface CreatePaginationConfig<
+  TListKey extends string = string,
+  TTotalKey extends string = string,
+> {
+  /** 列表字段路径，支持点号嵌套 */
+  listKey: TListKey
+
+  /** 总条数字段路径，支持点号嵌套 */
+  totalKey: TTotalKey
+
+  /**
+   * 分页参数序列化方式
+   * @example
+   * paginationSerializer: (page, size) => ({ current: page, size })
+   */
+  paginationSerializer?: (page: number, pageSize: number) => Record<string, any>
+
+  /** 全局默认配置，会被调用时的 options 覆盖 */
+  options?: Omit<PaginationOptions, 'dataSerializer'>
+}
+```
+
+## 返回的工厂函数
+
+`createPagination` 返回一个 `usePage` 工厂函数：
+
+```typescript
+function usePage<
+  TData = any,
+  TParams extends Record<string, any> = Record<string, any>,
+  TItem = any,
+  TFormatData = TItem,
+>(
+  service: RequestServiceFn<TData, [TParams]>,
+  options?: PaginationOptions<TData, TParams, TItem, TFormatData>,
+): PaginationResult<TData, TParams, TItem, TFormatData>;
+```
+
+## 使用示例
+
+```typescript
+import { createPagination } from 'norm-fetch/vue-rex'
+
+const usePage = createPagination({
+  listKey: 'data.list',
+  totalKey: 'data.total',
+  paginationSerializer: (page, size) => ({ page, size })
+})
+
+const { list, total, page, pageSize, loading, run } = usePage(
+  (params) => fetch('/api/list', params)
+)
 ```
 
 ## 相关类型
 
-### [PaginationResponse](./pagination-response)
-
-### [PaginationServiceFn](./pagination-service-fn)
-
-### [PaginationAndFetchOptions](./pagination-and-fetch-options)
+### [PaginationData](./pagination-response)
 
 ### [PaginationOptions](./pagination-options)
 
@@ -47,20 +97,18 @@ function usePagination<
 
 ## 泛型
 
-| 名称            | 默认值                                         | 继承                                          | 可选  | 描述        |
-|:--------------|:--------------------------------------------|:--------------------------------------------|:----|-----------|
-| `TData`       | [PaginationResponse](./pagination-response) | [PaginationResponse](./pagination-response) | `是` | 数据类型      |
-| `TParams`     | `any[]`                                     | `any[]`                                     | `是` | 函数入参类型    |
-| `TFormatData` | `TData`                                     | [PaginationResponse](./pagination-response) | `是` | 格式化数据后的类型 |
-| `TRawData`    | `any`                                       |                                             | `是` | 原始数据类型    |
+| 名称            | 默认值       | 继承      | 可选  | 描述              |
+|:--------------|:----------|:--------|:----|-----------------|
+| `TListKey`    | `string`  | `string` | `是` | 列表字段路径          |
+| `TTotalKey`   | `string`  | `string` | `是` | 总条数字段路径         |
 
-## 入参
+## 入参（工厂函数）
 
-| 名称        | 类型                                                                                   | 默认值 | 可选  | 描述                         |
-|:----------|:-------------------------------------------------------------------------------------|:----|-----|:---------------------------|
-| `service` | [PaginationServiceFn\<TData, TRawData>](./pagination-service-fn)                     | -   | `否` | 异步函数 |
-| `options` | [PaginationAndFetchOptions\<TData, TParams, TFormatData, TRawData>](./pagination-and-fetch-options) | -   | `是` | 配置对象                       |
+| 名称        | 类型                                                                                       | 默认值 | 可选  | 描述                         |
+|:----------|:-----------------------------------------------------------------------------------------|:----|:----|:---------------------------|
+| `service` | [RequestServiceFn\<TData, [TParams]>](../use-request/request-service-fn)                    | -   | `否` | 异步函数                      |
+| `options` | [PaginationOptions\<TData, TParams, TItem, TFormatData>](./pagination-options)             | -   | `是` | 配置对象                       |
 
 #### 返回值
 
-[PaginationResult<TData, TParams, TFormatData, TRawData>](./pagination-result.md)
+[PaginationResult<TData, TParams, TItem, TFormatData>](./pagination-result.md)

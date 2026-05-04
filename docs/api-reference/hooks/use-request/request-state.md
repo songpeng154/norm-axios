@@ -2,45 +2,37 @@
 outline: deep
 ---
 
-[useRequest](./home) / **RequestState**
+[createRequest](./home) / **RequestState**
 
 # 接口：RequestState
 
-`RequestState` 是 [useRequest](./home.md) 返回的数据状态类型。
+`RequestState` 是 [createRequest](./home.md) 返回的数据状态类型。
 
 ## 类型声明
 ```typescript
-import { any } from '请求'
-
 export interface RequestState<
   // 数据
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
-  // 原始数据
-  TRawData = any,
+  TFormatData = TSerialized,
 > {
   /**
-   * service 返回的数据 ｜ 格式化后的数据
+   * service resolve 的数据,会经过 formatData 处理
    */
   data: Undefinable<TFormatData>
 
   /**
-   * service 返回的原始数据，取自 response.data
+   * service resolve 的数据
    */
-  rawData: Undefinable<TRawData>
+  rawData: Undefinable<TData>
 
   /**
-   * service 返回的错误
+   * service reject/throw 的错误
    */
-  error: Undefinable<ResponseError>
-
-  /**
-   * 请求 原始响应内容
-   */
-  response: Undefinable<any<TRawData>>
+  error: Undefinable<any>
 
   /**
    * service 是否正在执行
@@ -53,7 +45,7 @@ export interface RequestState<
   finished: boolean
 
   /**
-   * 当次执行的 service 的参数数组。比如你触发了 run(1, 2, 3)，则 params 等于 [1, 2, 3]
+   * 当次执行的 service 的参数数组
    */
   params: TParams
 }
@@ -65,8 +57,8 @@ export interface RequestState<
 |:--------------|:--------|:--------|:----|-----------|
 | `TData`       | `any`   |         | `是` | 数据类型      |
 | `TParams`     | `any[]` | `any[]` | `是` | 函数入参类型    |
-| `TFormatData` | `TData` |         | `是` | 格式化数据后的类型 |
-| `TRawData`    | `any`   |         | `是` | 原始数据类型    |
+| `TSerialized` | `TData` |         | `是` | 序列化后的数据类型 |
+| `TFormatData` | `TSerialized` |    | `是` | 格式化数据后的类型 |
 
 ## 属性
 
@@ -74,25 +66,19 @@ export interface RequestState<
 
 * `必填` - `Undefinable<TFormatData>`
 
-[service](request-service-fn) 返回的数据 ｜ 格式化后的数据
+[service](request-service-fn) resolve 的数据，会经过 `formatData` 处理
 
 ### rawData
 
-* `必填` - `Undefinable<TRawData>`
+* `必填` - `Undefinable<TData>`
 
-[service](request-service-fn) 返回的原始数据，取自 [response.data](#response)
+[service](request-service-fn) resolve 的原始数据
 
 ### error
 
-* `必填` -  `Undefinable<ResponseError>`
+* `必填` -  `Undefinable<any>`
 
-[service](request-service-fn) 返回的错误；[具体字段](/api-reference/common-type/response-error.md)
-
-### response
-
-* `必填` -  `Undefinable<any<TRawData>>`
-
-`请求` 原始响应内容;[具体字段](https://github.com/请求/请求/blob/v1.x/index.d.ts#L393)
+[service](request-service-fn) reject/throw 的错误
 
 ### loading
 
@@ -111,6 +97,5 @@ export interface RequestState<
 ### params
 
 * `必填` -  `TParams`
-* 默认值：[defaultParams](./request-options#defaultParams)
 
 当次执行的 [service](request-service-fn) 的参数数组。比如你触发了 `run(1, 2, 3)`，则 `params` 等于 `[1, 2, 3]`

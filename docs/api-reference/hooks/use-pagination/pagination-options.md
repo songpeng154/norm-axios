@@ -2,76 +2,99 @@
 outline: deep
 ---
 
-[usePagination](./home) / **PaginationOptions**
+[createPagination](./home) / **PaginationOptions**
 
 # 接口：PaginationOptions
-[usePagination](./home)的配置项
+
+[createPagination](./home)返回的工厂函数的配置项
+
 ## 类型声明
 
 ```typescript
-export interface PaginationOptions {
-  /**
-   * 父级容器，如果存在，则在滚动到底部时，分页自动+1,然后加载数据
-   * 避免重复触发，请求期间不会触发滚动到底部的事件
-   */
-  target?: MaybeRef<HTMLElement> | ShallowRef<HTMLElement | null>
+import type { DebouncedFunction } from 'es-toolkit'
 
-  /**
-   * 加载更多偏移量
-   * @default 100
-   */
-  loadMoreOffset?: number
-
-  /**
-   * 初始页码
-   * @default 1
-   */
+export interface PaginationOptions<
+  TData = any,
+  TParams extends Record<string, any> = Record<string, any>,
+  TItem = any,
+  TFormatData = TItem,
+> extends Omit<
+    RequestOptions<
+      TData,
+      [TParams],
+      PaginationData<TItem>,
+      PaginationData<TFormatData>
+    >,
+    'dataSerializer' | 'formatData' | 'defaultParams'
+    | 'onSuccess' | 'onError' | 'onBefore' | 'onFinally' | 'onFinallyFetchDone'
+  > {
+  /** 初始页码 */
   initialPage?: number
 
-  /**
-   * 初始每页数据条数
-   * @default 10
-   */
+  /** 初始每页条数 */
   initialPageSize?: number
 
   /**
-   * 追加模式
-   * 开启后会自动追加数据，在加载更多的功能上会用到这个功能
-   * @default false
-   */
-  addedMode?: boolean
-
-  /**
-   * 当 page 变化的时候自动调用服务
-   * 当 pageWatch 与 watchSource 同时设置为 true 后，page 或者 pageSize变化的时候会调用两遍服务，这个问题可以设置 pageWatch 或者 watchSource来解决
+   * page 变化时是否自动刷新
+   * 为 true 时会自动禁用 watchSource 的依赖自动收集（watchSource: true），
+   * 避免 page/pageSize 变化时重复请求；显式传入 watchSource: Ref[] 仍会保留
    * @default true
    */
   pageWatch?: boolean
 
-  /**
-   * 当 pageSize 变化的时候重置 page
-   * @default true
-   */
+  /** pageSize 变化时是否重置 page @default true */
   resetPageWhenPageSizeChange?: boolean
+
+  /** 默认参数，直接传对象即可 */
+  defaultParams?: TParams
+
+  /** 分页参数序列化，用于适配后端不同的字段名 */
+  paginationSerializer?: (page: number, pageSize: number) => Partial<TParams>
+
+  /** 从 server 返回数据中提取 list 和 total */
+  dataSerializer: (data: TData, params: TParams) => PaginationData<TItem>
+
+  /** 格式化列表项，total 保持不变 */
+  formatList?: (list: TItem[], rawData: TData, params: TParams) => TFormatData[]
+
+  /** 请求之前执行 */
+  onBefore?: (params: TParams) => void
+
+  /** 请求成功时执行 */
+  onSuccess?: (
+    data: PaginationData<TFormatData>,
+    rawData: TData,
+    params: TParams,
+  ) => void
+
+  /** 请求错误的时候执行 */
+  onError?: (
+    error: any,
+    params: TParams,
+  ) => void
+
+  /** 最后执行，不管 service 成功失败都会执行 */
+  onFinally?: (params: TParams) => void
+
+  /** 当连续请求的时候，最后一个服务请求完成之后触发 */
+  onFinallyFetchDone?: (params: TParams) => void
 }
 ```
 
+## 泛型
+
+| 名称            | 默认值       | 继承      | 可选  | 描述              |
+|:--------------|:----------|:--------|:----|-----------------|
+| `TData`       | `any`     |         | `是` | service 返回的数据类型 |
+| `TParams`     | `Record<string, any>` | `Record<string, any>` | `是` | 分页请求参数类型 |
+| `TItem`       | `any`     |         | `是` | 列表项类型          |
+| `TFormatData` | `TItem`   |         | `是` | 格式化后的列表项类型    |
+
+## 继承
+
+继承自 `RequestOptions<TData, [TParams], PaginationData<TItem>, PaginationData<TFormatData>>`，但不包含 `dataSerializer`、`formatData`、`defaultParams`、`onSuccess`、`onError`、`onBefore`、`onFinally`、`onFinallyFetchDone`。
+
 ## 属性
-
-### target
-
-* `可选` - `MaybeRef<HTMLElement> | ShallowRef<HTMLElement | null>`
-
-父级容器，如果存在，则在滚动到底部时，分页自动+1,然后加载数据
-
-避免重复触发，请求期间不会触发滚动到底部的事件
-
-### loadMoreOffset
-
-* `可选` - `number`
-* 默认值：`100`
-
-加载更多偏移量
 
 ### initialPage
 
@@ -85,31 +108,115 @@ export interface PaginationOptions {
 * `可选` - `number`
 * 默认值：`10`
 
-初始每页数据条数
-
-### addedMode
-
-* `可选` - `boolean`
-* 默认值：`false`
-
-追加模式
-
-开启后会自动追加数据，在加载更多的功能上会用到这个功能
+初始每页条数
 
 ### pageWatch
 
 * `可选` - `boolean`
 * 默认值：`true`
 
-当 [page](./pagination-result) 变化的时候自动调用服务
-
-当 `pageWatch` 与 [watchSource](../use-request/request-options#watchsource) 同时设置为 `true`
-后，[page](./pagination-result) 或者 [pageSize](./pagination-result) 变化的时候会调用两遍服务，这个问题可以设置
-`pageWatch` 或者 [watchSource](../use-request/request-options#watchsource)来解决
+page 变化时是否自动刷新。为 `true` 时会自动禁用 `watchSource` 的依赖自动收集，避免 page/pageSize 变化时重复请求。显式传入 `watchSource: Ref[]` 仍会保留。
 
 ### resetPageWhenPageSizeChange
 
 * `可选` - `boolean`
 * 默认值：`true`
 
-当 [pageSize](./pagination-result) 变化的时候重置 [page](./pagination-result)
+pageSize 变化时是否重置 page
+
+### defaultParams
+
+* `可选` - `TParams`
+
+默认参数，直接传对象即可
+
+### paginationSerializer
+
+* `可选` - `(page: number, pageSize: number) => Partial<TParams>`
+
+分页参数序列化，用于适配后端不同的字段名
+
+### dataSerializer
+
+* `必填` - `(data: TData, params: TParams) => PaginationData<TItem>`
+
+从 service 返回数据中提取 list 和 total
+
+### formatList
+
+* `可选` - `(list: TItem[], rawData: TData, params: TParams) => TFormatData[]`
+
+格式化列表项，total 保持不变
+
+### onBefore
+
+请求之前执行
+
+#### 入参
+
+| 名称       | 类型        | 默认值 | 描述 |
+|:---------|:----------|:----|:---|
+| `params` | `TParams` |     | 入参 |
+
+#### 返回值
+
+`void`
+
+### onSuccess
+
+请求成功时执行
+
+#### 入参
+
+| 名称       | 类型                                 | 默认值 | 描述        |
+|:---------|:-----------------------------------|:----|:----------|
+| `data`   | `PaginationData<TFormatData>`      |     | 分页数据      |
+| `rawData`| `TData`                            |     | 原始数据      |
+| `params` | `TParams`                          |     | 入参        |
+
+#### 返回值
+
+`void`
+
+### onError
+
+请求错误的时候执行
+
+#### 入参
+
+| 名称       | 类型        | 默认值 | 描述 |
+|:---------|:----------|:----|:---|
+| `error`  | `any`     |     | 错误信息 |
+| `params` | `TParams` |     | 入参 |
+
+#### 返回值
+
+`void`
+
+### onFinally
+
+最后执行，不管 service 成功失败都会执行
+
+#### 入参
+
+| 名称       | 类型        | 默认值 | 描述 |
+|:---------|:----------|:----|:---|
+| `params` | `TParams` |     | 入参 |
+
+#### 返回值
+
+`void`
+
+### onFinallyFetchDone
+
+当连续请求的时候，最后一个服务请求完成之后触发
+
+#### 入参
+
+| 名称       | 类型        | 默认值 | 描述 |
+|:---------|:----------|:----|:---|
+| `params` | `TParams` |     | 入参 |
+
+#### 返回值
+
+`void`

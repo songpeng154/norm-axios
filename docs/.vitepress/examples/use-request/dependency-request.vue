@@ -1,47 +1,86 @@
 <script setup lang="ts">
-import type { ResponseContent } from 'vue-rex'
-import { useRequest } from 'vue-rex'
+import { createRequest } from 'vue-rex'
 import { computed } from 'vue'
 
-const asyncAwait = async (millisecond: number) => new Promise(resolve => setTimeout(resolve, millisecond))
+const useApi = createRequest({ dataKey: 'data' })
 
-// 获取假数据
-const getFakeData = async (): Promise<ResponseContent<number>> => {
-  await asyncAwait(3000)
-  return [Date.now(), undefined]
+interface User {
+  id: number
+  name: string
 }
 
-const { data: data1, loading: loading1 } = useRequest(getFakeData)
-const ready = computed(() => !!data1.value)
-const { data: data2, loading: loading2 } = useRequest(getFakeData, {
+interface Order {
+  orderId: number
+  product: string
+  amount: number
+}
+
+// 请求 A：获取用户信息
+const getUsers = async (): Promise<{ data: User[] }> => {
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  return {
+    data: [
+      { id: 1, name: '张三' },
+      { id: 2, name: '李四' },
+    ],
+  }
+}
+
+// 请求 B：需要先拿到用户 ID 才能查询
+const getUserOrders = async (userId: number): Promise<{ data: Order[] }> => {
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  return {
+    data: [
+      { orderId: 1001, product: 'Vue 3 高级教程', amount: 99 },
+      { orderId: 1002, product: 'TypeScript 从入门到精通', amount: 79 },
+    ],
+  }
+}
+
+const { data: users, loading: loadingUsers } = useApi(getUsers)
+const ready = computed(() => !!users.value && users.value.length > 0)
+
+// ready: 只有 users 加载完成后才发起
+// watchSource: 监听 users 变化后自动执行
+const { data: orders, loading: loadingOrders } = useApi(() => getUserOrders(users.value![0].id), {
   ready,
-  watchSource: data1,
+  watchSource: users,
 })
 </script>
 
 <template>
   <div>
-    <p>数据 A：{{ loading1 ? '加载中...' : data1 }}</p>
-    <p>数据 B 是否准备好：{{ ready }}</p>
-    <p>数据 B：{{ loading2 ? '加载中...' : data2 }}</p>
+    <p class="desc">
+      ready + watchSource 实现请求依赖：B 请求依赖 A 的数据，A 完成后再自动发起 B。
+    </p>
+    <div class="row">
+      <div class="col">
+        <h4>请求 A：用户列表</h4>
+        <div v-if="loadingUsers" class="state-box loading">加载用户中...</div>
+        <div v-else-if="users" class="state-box success">
+          <p v-for="u in users" :key="u.id">{{ u.name }}（ID: {{ u.id }}）</p>
+        </div>
+      </div>
+      <div class="col">
+        <h4>请求 B：订单（依赖 A）</h4>
+        <div v-if="!ready" class="state-box loading">等待用户数据就绪...</div>
+        <div v-else-if="loadingOrders" class="state-box loading">加载订单中...</div>
+        <div v-else-if="orders" class="state-box success">
+          <p v-for="o in orders" :key="o.orderId">{{ o.product }} - ￥{{ o.amount }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-input {
-  background: var(--vp-c-bg-soft);
-  //border: none;
-  padding: 5px 15px;
-  border-radius: 4px;
-  margin-right: 10px;
-}
-
-button {
-  background: #5e7aeb;
-  color: white;
-  border: none;
-  padding: 5px 15px;
-  border-radius: 4px;
-  margin-right: 10px;
-}
+.demo-card { padding: 0; }
+.desc { font-size: 13px; color: var(--vp-c-text-2); margin: 0 0 12px; }
+.row { display: flex; gap: 16px; }
+.col { flex: 1; }
+h4 { margin: 0 0 8px; font-size: 14px; }
+.state-box { padding: 12px; border-radius: 6px; font-size: 14px; }
+.loading { background: var(--vp-c-bg-soft); color: var(--vp-c-text-2); }
+.success { background: var(--vp-c-brand-soft); }
+p { margin: 0 0 4px; }
 </style>

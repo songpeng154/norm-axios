@@ -2,7 +2,7 @@
 outline: deep
 ---
 
-[useRequest](./home) / **RequestPluginHooks**
+[createRequest](./home) / **RequestPluginHooks**
 
 # 接口：RequestPluginHooks
 
@@ -11,17 +11,14 @@ outline: deep
 ## 类型声明
 
 ```typescript
-import { any } from '请求'
-
 export interface RequestPluginHooks<
   // 数据
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
-  // 原始数据
-  TRawData = any,
+  TFormatData = TSerialized,
 > {
   /**
    * 请求之前触发
@@ -32,19 +29,18 @@ export interface RequestPluginHooks<
   } | void
 
   /**
-   * 请求开始时触发
+   * 请求开始时触发（可拦截并替换 servicePromise）
    */
-  onRequest?: (service: (...params: TParams) => Promise<ResponseContent<TData, TRawData>>, params: TParams) => {
-    servicePromise: Promise<ResponseContent<TData, TRawData>>
+  onRequest?: (service: (...params: TParams) => Promise<TData>, params: TParams) => {
+    servicePromise: Promise<TData>
   }
 
   /**
    * 请求失败时触发
    */
   onError?: (
-    error: ResponseError,
+    error: any,
     params: TParams,
-    response: any<TRawData>,
   ) => void
 
   /**
@@ -52,14 +48,14 @@ export interface RequestPluginHooks<
    */
   onSuccess?: (
     data: TFormatData,
+    rawData: TData,
     params: TParams,
-    response: any<TRawData>,
   ) => void
 
   /**
    * 当连续请求的时候，最后一个服务请求完成之后触发
    */
-  onFinallyFetchDone?: () => void
+  onFinallyFetchDone?: (params: TParams) => void
 
   /**
    * 最后执行，不管 server 成功还是失败都会执行
@@ -76,7 +72,6 @@ export interface RequestPluginHooks<
    */
   onCancel?: () => void
 }
-
 ```
 
 ## 泛型
@@ -85,8 +80,8 @@ export interface RequestPluginHooks<
 |:--------------|:--------|:--------|:----|-----------|
 | `TData`       | `any`   |         | `是` | 数据类型      |
 | `TParams`     | `any[]` | `any[]` | `是` | 函数入参类型    |
-| `TFormatData` | `TData` |         | `是` | 格式化数据后的类型 |
-| `TRawData`    | `any`   |         | `是` | 原始数据类型    |
+| `TSerialized` | `TData` |         | `是` | 序列化后的数据类型 |
+| `TFormatData` | `TSerialized` |    | `是` | 格式化数据后的类型 |
 
 ### onBefore
 
@@ -108,20 +103,20 @@ export interface RequestPluginHooks<
 
 ### onRequest
 
-请求开始时触发
+请求开始时触发（可拦截并替换 servicePromise）
 
 #### 入参
 
-| 名称        | 类型                                                                  | 默认值 | 描述   |
-|:----------|:--------------------------------------------------------------------|:----|:-----|
-| `service` | `(...params: TParams) => Promise<ResponseContent<TData, TRawData>>` |     | 请求服务 |
-| `params`  | `TParams`                                                           |     | 请求参数 |
+| 名称        | 类型                                            | 默认值 | 描述   |
+|:----------|:----------------------------------------------|:----|:-----|
+| `service` | `(...params: TParams) => Promise<TData>`      |     | 请求服务 |
+| `params`  | `TParams`                                     |     | 请求参数 |
 
 #### 返回值
 
-| 名称               | 类型                                          | 必填  | 描述          |
-|:-----------------|:--------------------------------------------|:----|-------------|
-| `servicePromise` | `Promise<ResponseContent<TData, TRawData>>` | `是` | 服务`Promise` |
+| 名称               | 类型                        | 必填  | 描述          |
+|:-----------------|:--------------------------|:----|:------------|
+| `servicePromise` | `Promise<TData>`          | `是` | 服务`Promise` |
 
 ### onError
 
@@ -129,11 +124,10 @@ export interface RequestPluginHooks<
 
 #### 入参
 
-| 名称         | 类型                                                         | 默认值 | 描述          |
-|:-----------|:-----------------------------------------------------------|:----|:------------|
-| `error`    | [ResponseError](/api-reference/common-type/response-error) |     | 错误信息        |
-| `params`   | `TParams`                                                  |     | 请求参数        |
-| `response` | [any\<TRawData>](https://github.com/请求/请求) |     | `请求`原始响应 |
+| 名称       | 类型        | 默认值 | 描述   |
+|:---------|:----------|:----|:-----|
+| `error`  | `any`     |     | 错误信息 |
+| `params` | `TParams` |     | 请求参数 |
 
 #### 返回值
 
@@ -145,11 +139,11 @@ export interface RequestPluginHooks<
 
 #### 入参
 
-| 名称         | 类型                                                         | 默认值 | 描述            |
-|:-----------|:-----------------------------------------------------------|:----|:--------------|
-| `data`     | `TFormatData`                                              |     | 数据 \| 格式化后的数据 |
-| `params`   | `TParams`                                                  |     | 请求参数          |
-| `response` | [any\<TRawData>](https://github.com/请求/请求) |     | `请求`原始响应   |
+| 名称       | 类型            | 默认值 | 描述            |
+|:---------|:--------------|:----|:--------------|
+| `data`   | `TFormatData` |     | 数据 \| 格式化后的数据 |
+| `rawData`  | `TData`    |     | 原始数据          |
+| `params` | `TParams`     |     | 请求参数          |
 
 #### 返回值
 
@@ -158,6 +152,12 @@ export interface RequestPluginHooks<
 ### onFinallyFetchDone
 
 当连续请求的时候，最后一个服务请求完成之后触发
+
+#### 入参
+
+| 名称       | 类型        | 默认值 | 描述   |
+|:---------|:----------|:----|:-----|
+| `params` | `TParams` |     | 请求参数 |
 
 #### 返回值
 

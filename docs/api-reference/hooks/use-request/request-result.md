@@ -2,11 +2,11 @@
 outline: deep
 ---
 
-[useRequest](./home) / **RequestResult**
+[createRequest](./home) / **RequestResult**
 
 # 类型：RequestResult
 
-[useRequest](./home.md)的返回值类型
+[createRequest](./home.md)返回的工厂函数的返回值类型
 
 ## 类型声明
 ```typescript
@@ -22,12 +22,11 @@ export type RequestResult<
   TData = any,
   // 方法参数
   TParams extends any[] = any[],
+  TSerialized = TData,
   // 格式化数据
-  TFormatData = TData,
-  // 原始数据
-  TRawData = any,
-> = WrapWithComputed<RequestState<TData, TParams, TFormatData, TRawData>> &
-  RequestMethod<TData, TParams, TFormatData>
+  TFormatData = TSerialized,
+> = WrapWithComputed<RequestState<TData, TParams, TSerialized, TFormatData>> &
+  RequestMethod<TData, TParams, TSerialized, TFormatData>
 ```
 
 ## 泛型
@@ -36,11 +35,10 @@ export type RequestResult<
 |:--------------|:--------|:--------|:----|-----------|
 | `TData`       | `any`   |         | `是` | 数据类型      |
 | `TParams`     | `any[]` | `any[]` | `是` | 函数入参类型    |
-| `TFormatData` | `TData` |         | `是` | 格式化数据后的类型 |
-| `TRawData`    | `any`   |         | `是` | 原始数据类型    |
+| `TSerialized` | `TData` |         | `是` | 序列化后的数据类型 |
+| `TFormatData` | `TSerialized` |    | `是` | 格式化数据后的类型 |
 
 ## 引用
 
 * [RequestState](request-state)
 * [RequestMethod](request-method)
-

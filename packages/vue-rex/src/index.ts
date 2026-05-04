@@ -1,1 +1,1 @@
-export { createPagination, createRequest } from './hooks/index'
+export { clearCache, createPagination, createRequest, getCacheAll } from './hooks/index'

@@ -1,58 +1,32 @@
 <script setup lang="ts">
-import type { PaginationResponse, ResponseContent } from 'vue-rex'
-import { usePagination } from 'vue-rex'
+import { createPagination } from 'vue-rex'
+
+// 1. 创建分页实例，配置 listKey 和 totalKey
+const usePage = createPagination({
+  listKey: 'data.list',
+  totalKey: 'data.total',
+})
 
 interface User {
+  id: number
   name: string
   age: number
-  address: string
-  time: number
+  city: string
 }
 
-const asyncAwait = async (millisecond: number) => new Promise(resolve => setTimeout(resolve, millisecond))
-
-// 获取假数据
-const getFakeData = async ({ page, pageSize }: { page: number, pageSize: number }): Promise<ResponseContent<PaginationResponse<User>>> => {
+// 2. service 接收 { page, pageSize }，返回后端响应格式
+const getUsers = async (params: { page: number; pageSize: number }) => {
+  await new Promise(resolve => setTimeout(resolve, 1000))
   const total = 50
-
-  const list: User[] = Array.from({ length: pageSize }, (_, i) => {
-    const id = (page - 1) * pageSize + i + 1
-    return {
-      name: `用户 ${id}`,
-      age: 20 + (id % 10),
-      address: `城市 ${id}`,
-      time: Date.now() + id * 1000,
-    }
-  }).filter((_, i) => (page - 1) * pageSize + i < total) // 避免超出 total
-
-  await asyncAwait(300) // 模拟接口延迟
-
-  return [
-    {
-      list,
-      total,
-    },
-    undefined,
-  ]
+  const list: User[] = Array.from({ length: params.pageSize }, (_, i) => {
+    const id = (params.page - 1) * params.pageSize + i + 1
+    return { id, name: `用户 ${id}`, age: 20 + (id % 15), city: `城市 ${id}` }
+  }).filter(u => u.id <= total)
+  return { data: { list, total } }
 }
 
-const { list, loading, page, pageSize, total, totalPage } = usePagination(getFakeData)
-
-const previousPage = () => {
-  if (page.value === 1) return
-  page.value -= 1
-}
-const nextPage = () => {
-  if (totalPage.value === page.value) return
-  page.value += 1
-}
-const addPageSize = (num: number) => {
-  pageSize.value += num
-}
-
-const lowerPageSize = (num: number) => {
-  pageSize.value -= num
-}
+// 3. 调用 usePage，自动管理 page/pageSize/loading/list/total 等状态
+const { list, loading, page, pageSize, total, totalPage } = usePage(getUsers)
 </script>
 
 <template>
@@ -60,51 +34,46 @@ const lowerPageSize = (num: number) => {
     <table>
       <thead>
         <tr>
-          <th>姓名</th>
-          <th>年龄</th>
-          <th>地址</th>
-          <th>日期</th>
+          <th>ID</th><th>姓名</th><th>年龄</th><th>城市</th>
         </tr>
       </thead>
       <tbody v-if="!loading">
-        <tr v-for="(item, index) in list" :key="index">
-          <td>{{ item.name }}</td>
-          <td>{{ item.age }}</td>
-          <td>{{ item.address }}</td>
-          <td>{{ item.time }}</td>
-        </tr>
-      </tbody>
-      <tbody v-else>
-        <tr>
-          <td colspan="4">
-            加载中...
-          </td>
+        <tr v-for="user in list" :key="user.id">
+          <td>{{ user.id }}</td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.age }}</td>
+          <td>{{ user.city }}</td>
         </tr>
       </tbody>
     </table>
-    <p>当前分页:{{ page }}  当前分页数量:{{ pageSize }}  总数:{{ total }}  分页总数:{{ totalPage }}</p>
-    <button @click="previousPage">
-      上一页
-    </button>
-    <button @click="nextPage">
-      下一页
-    </button>
-    <button @click="addPageSize(10)">
-      分页数量 +10
-    </button>
-    <button @click="lowerPageSize(10)">
-      分页数量 -10
-    </button>
+    <div v-if="loading" class="loading-row">⏳ 加载中...</div>
+
+    <div class="pager">
+      <span>第 {{ page }} / {{ totalPage }} 页，共 {{ total }} 条</span>
+      <div class="btns">
+        <button :disabled="page === 1" @click="page--">上一页</button>
+        <button :disabled="page >= totalPage" @click="page++">下一页</button>
+        <select :value="pageSize" @change="pageSize = Number(($event.target as HTMLSelectElement).value)">
+          <option :value="5">5条/页</option>
+          <option :value="10">10条/页</option>
+          <option :value="20">20条/页</option>
+        </select>
+      </div>
+    </div>
+    <p class="hint">修改 page / pageSize 会自动触发请求，无需手动处理</p>
   </div>
 </template>
 
 <style lang="scss" scoped>
-button {
-  background: #5e7aeb;
-  color: white;
-  border: none;
-  padding: 5px 15px;
-  border-radius: 4px;
-  margin-right: 10px;
-}
+.demo-card { padding: 0; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 14px; }
+th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--vp-c-divider); }
+th { font-weight: 600; }
+.loading-row { text-align: center; padding: 20px; color: var(--vp-c-text-2); }
+.pager { display: flex; justify-content: space-between; align-items: center; font-size: 14px; flex-wrap: wrap; gap: 8px; }
+.btns { display: flex; gap: 6px; align-items: center; }
+button { background: #5e7aeb; color: #fff; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+select { padding: 4px 8px; border-radius: 4px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); }
+.hint { font-size: 13px; color: var(--vp-c-text-2); margin: 8px 0 0; }
 </style>
