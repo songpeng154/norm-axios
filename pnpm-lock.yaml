@@ -82,8 +82,8 @@ importers:
         specifier: ^13.1.0
         version: 13.9.0(vue@3.5.33(typescript@6.0.3))
       vue-rex:
-        specifier: workspace:*
-        version: link:..
+        specifier: latest
+        version: 1.1.14(typescript@6.0.3)(vue@3.5.33(typescript@6.0.3))
     devDependencies:
       '@iconify/json':
         specifier: ^2.2.468
@@ -4572,6 +4572,12 @@ packages:
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+
+  vue-rex@1.1.14:
+    resolution: {integrity: sha512-V5Yn/j6SVePE6lpAzc6hV0/vIAln3lcpEvCRFo2bumSIi/xQOyArmH5wrtFQ+zRQpy8j1OVHRv6Kw2BzPT37lQ==}
+    engines: {node: '>=18.12.0', pnpm: '>=8.7.0'}
+    peerDependencies:
+      vue: ^3.3.0
 
   vue-tsc@2.2.12:
     resolution: {integrity: sha512-P7OP77b2h/Pmk+lZdJ0YWs+5tJ6J2+uOQPo7tlBnY44QqQSPYvS0qVT4wqDJgwrZaLe47etJLLQRFia71GYITw==}
@@ -9216,6 +9222,15 @@ snapshots:
       semver: 7.7.4
     transitivePeerDependencies:
       - supports-color
+
+  vue-rex@1.1.14(typescript@6.0.3)(vue@3.5.33(typescript@6.0.3)):
+    dependencies:
+      '@vueuse/core': 12.8.2(typescript@6.0.3)
+      es-toolkit: 1.46.1
+      mitt: 3.0.1
+      vue: 3.5.33(typescript@6.0.3)
+    transitivePeerDependencies:
+      - typescript
 
   vue-tsc@2.2.12(typescript@6.0.3):
     dependencies:

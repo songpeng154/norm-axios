@@ -8,7 +8,7 @@
     "preview": "vitepress preview"
   },
   "dependencies": {
-    "vue-rex": "workspace:*",
+    "vue-rex": "latest",
     "@vueuse/core": "^13.1.0"
   },
   "devDependencies": {
