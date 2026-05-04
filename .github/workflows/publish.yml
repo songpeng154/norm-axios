@@ -31,6 +31,7 @@ jobs:
         run: pnpm run build
 
       - name: Publish to npm
-        run: pnpm -C packages/vue-rex publish --no-git-checks
+        run: npm publish
+        working-directory: packages/vue-rex
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
