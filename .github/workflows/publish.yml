@@ -3,7 +3,11 @@ name: Publish
 on:
   push:
     tags:
-      - 'v*.*.*'  # 只有打 tag 才触发发布
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   build-and-publish:
@@ -31,7 +35,5 @@ jobs:
         run: pnpm run build
 
       - name: Publish to npm
-        run: npm publish
+        run: npm publish --provenance --access public
         working-directory: packages/vue-rex
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
