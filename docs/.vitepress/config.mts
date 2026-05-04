@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 import { setupContainerDemo } from './container/demo'
 
 export default defineConfig({
+  base: '/vue-rex/',
   cleanUrls: true,
   markdown: {
     theme: {
