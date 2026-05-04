@@ -5,6 +5,9 @@ import { setupContainerDemo } from './container/demo'
 export default defineConfig({
   base: '/vue-rex/',
   cleanUrls: true,
+  head: [
+    ['link', { rel: 'icon', href: '/vue-rex/favicon.ico' }]
+  ],
   markdown: {
     theme: {
       dark: 'github-dark',
