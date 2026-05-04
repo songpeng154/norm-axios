@@ -7,25 +7,74 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@vueuse/core':
+        specifier: ^12.8.2
+        version: 12.8.2(typescript@6.0.3)
+      es-toolkit:
+        specifier: ^1.46.1
+        version: 1.46.1
+      mitt:
+        specifier: ^3.0.1
+        version: 3.0.1
+      vue:
+        specifier: ^3.3.0
+        version: 3.5.33(typescript@6.0.3)
     devDependencies:
       '@antfu/eslint-config':
         specifier: ^4.19.0
         version: 4.19.0(@typescript-eslint/rule-tester@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(@typescript-eslint/typescript-estree@8.59.1(typescript@6.0.3))(@typescript-eslint/utils@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(@unocss/eslint-plugin@66.6.8(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(@vue/compiler-sfc@3.5.33)(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3)(vitest@4.1.5)
+      '@faker-js/faker':
+        specifier: ^10.4.0
+        version: 10.4.0
+      '@testing-library/vue':
+        specifier: ^8.1.0
+        version: 8.1.0(@vue/compiler-dom@3.5.33)(@vue/compiler-sfc@3.5.33)(@vue/server-renderer@3.5.33(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3))
+      '@types/node':
+        specifier: ^22.19.17
+        version: 22.19.17
+      '@vitest/ui':
+        specifier: ^4.1.5
+        version: 4.1.5(vitest@4.1.5)
+      '@vue/test-utils':
+        specifier: ^2.4.10
+        version: 2.4.10(@vue/compiler-dom@3.5.33)(@vue/server-renderer@3.5.33(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3))
+      axios:
+        specifier: ^1.15.2
+        version: 1.16.0
       bumpp:
         specifier: ^10.4.1
         version: 10.4.1
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.6.1)
+      happy-dom:
+        specifier: ^17.6.3
+        version: 17.6.3
       lint-staged:
         specifier: ^15.5.2
         version: 15.5.2
       simple-git-hooks:
         specifier: ^2.13.1
         version: 2.13.1
+      tsdown:
+        specifier: ^0.21.10
+        version: 0.21.10(synckit@0.11.12)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
+      type-fest:
+        specifier: ^5.6.0
+        version: 5.6.0
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.2(@types/node@22.19.17)(jiti@2.6.1)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.4)
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@types/node@22.19.17)(@vitest/ui@4.1.5)(happy-dom@17.6.3)(vite@6.4.2(@types/node@22.19.17)(jiti@2.6.1)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.4))
+      vue-tsc:
+        specifier: ^2.2.12
+        version: 2.2.12(typescript@6.0.3)
 
   docs:
     dependencies:
@@ -34,7 +83,7 @@ importers:
         version: 13.9.0(vue@3.5.33(typescript@6.0.3))
       vue-rex:
         specifier: workspace:*
-        version: link:../packages/vue-rex
+        version: link:..
     devDependencies:
       '@iconify/json':
         specifier: ^2.2.468
@@ -81,58 +130,6 @@ importers:
       vitepress:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.52.0)(@types/node@22.19.17)(async-validator@4.2.5)(axios@1.16.0)(change-case@5.4.4)(postcss@8.5.13)(sass-embedded@1.99.0)(sass@1.99.0)(search-insights@2.17.3)(typescript@6.0.3)
-
-  packages/vue-rex:
-    dependencies:
-      '@vueuse/core':
-        specifier: ^12.8.2
-        version: 12.8.2(typescript@6.0.3)
-      es-toolkit:
-        specifier: ^1.46.1
-        version: 1.46.1
-      mitt:
-        specifier: ^3.0.1
-        version: 3.0.1
-      vue:
-        specifier: ^3.3.0
-        version: 3.5.33(typescript@6.0.3)
-    devDependencies:
-      '@faker-js/faker':
-        specifier: ^10.4.0
-        version: 10.4.0
-      '@testing-library/vue':
-        specifier: ^8.1.0
-        version: 8.1.0(@vue/compiler-dom@3.5.33)(@vue/compiler-sfc@3.5.33)(@vue/server-renderer@3.5.33(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3))
-      '@types/node':
-        specifier: ^22.19.17
-        version: 22.19.17
-      '@vitest/ui':
-        specifier: ^4.1.5
-        version: 4.1.5(vitest@4.1.5)
-      '@vue/test-utils':
-        specifier: ^2.4.10
-        version: 2.4.10(@vue/compiler-dom@3.5.33)(@vue/server-renderer@3.5.33(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3))
-      axios:
-        specifier: ^1.15.2
-        version: 1.16.0
-      happy-dom:
-        specifier: ^17.6.3
-        version: 17.6.3
-      tsdown:
-        specifier: ^0.21.10
-        version: 0.21.10(synckit@0.11.12)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      type-fest:
-        specifier: ^5.6.0
-        version: 5.6.0
-      vite:
-        specifier: ^6.0.0
-        version: 6.4.2(@types/node@22.19.17)(jiti@2.6.1)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.4)
-      vitest:
-        specifier: ^4.1.5
-        version: 4.1.5(@types/node@22.19.17)(@vitest/ui@4.1.5)(happy-dom@17.6.3)(vite@6.4.2(@types/node@22.19.17)(jiti@2.6.1)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.4))
-      vue-tsc:
-        specifier: ^2.2.12
-        version: 2.2.12(typescript@6.0.3)
 
 packages:
 

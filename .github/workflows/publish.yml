@@ -36,4 +36,3 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --provenance --access public
-        working-directory: packages/vue-rex
