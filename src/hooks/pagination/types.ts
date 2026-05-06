@@ -19,8 +19,9 @@ export interface PaginationOptions<
   TParams extends Record<string, any> = Record<string, any>,
   TItem = any,
   TFormatData = TItem,
+  TError = any,
 > extends Omit<
-    RequestOptions<TData, [TParams], PaginationData<TItem>, PaginationData<TFormatData>>,
+    RequestOptions<TData, [TParams], PaginationData<TItem>, PaginationData<TFormatData>, TError>,
     'dataSerializer' | 'formatData' | 'defaultParams'
     | 'onSuccess' | 'onError' | 'onBefore' | 'onFinally' | 'onFinallyFetchDone'
   > {
@@ -65,7 +66,7 @@ export interface PaginationOptions<
 
   /** 请求错误的时候执行 */
   onError?: (
-    error: any,
+    error: TError,
     params: TParams,
   ) => void
 
@@ -84,12 +85,14 @@ export interface PaginationResult<
   TParams extends Record<string, any> = Record<string, any>,
   TItem = any,
   TFormatData = TItem,
+  TError = any,
 > extends Omit<
     RequestResult<
       TData,
       [TParams],
       PaginationData<TItem>,
-      PaginationData<TFormatData>
+      PaginationData<TFormatData>,
+      TError
     >,
     'params' | 'run' | 'debounceRun' | 'throttleRun' | 'optimisticUpdate'
   > {

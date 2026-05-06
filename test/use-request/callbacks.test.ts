@@ -106,3 +106,127 @@ describe('useRequest 生命周期回调', () => {
     expect(result).toBe('hello')
   })
 })
+
+describe('useRequest errorSerializer', () => {
+  it('将原始错误转换为自定义错误类型', async () => {
+    const service = async () => {
+      await asyncAwait(20)
+      throw new Error('Network error')
+    }
+
+    const [{ error }] = withSetup(() =>
+      useRequest(service, {
+        errorSerializer: (e: any) => ({
+          code: -1,
+          message: e?.message ?? String(e),
+        }),
+      }),
+    )
+
+    await asyncAwait(100)
+    expect(error.value).toEqual({
+      code: -1,
+      message: 'Network error',
+    })
+  })
+
+  it('errorSerializer 接收请求参数', async () => {
+    const service = async (userId: number) => {
+      await asyncAwait(20)
+      throw new Error('User not found')
+    }
+
+    let capturedParams: any = null
+    const [{ run }] = withSetup(() =>
+      useRequest(service, {
+        manual: true,
+        errorSerializer: (e: any, params) => {
+          capturedParams = params
+          return {
+            code: -1,
+            message: `${e?.message} (userId: ${params[0]})`,
+          }
+        },
+      }),
+    )
+
+    await run(42)
+    await asyncAwait(50)
+    expect(capturedParams).toEqual([42])
+  })
+
+  it('onError 回调接收转换后的错误', async () => {
+    const service = async () => {
+      await asyncAwait(20)
+      throw new Error('Original error')
+    }
+
+    let receivedError: any = null
+    const [{ error }] = withSetup(() =>
+      useRequest(service, {
+        errorSerializer: (e: any) => ({
+          code: 500,
+          message: e?.message ?? 'Unknown',
+        }),
+        onError: (err) => {
+          receivedError = err
+        },
+      }),
+    )
+
+    await asyncAwait(100)
+    expect(receivedError).toEqual({ code: 500, message: 'Original error' })
+    expect(error.value).toEqual({ code: 500, message: 'Original error' })
+  })
+
+  it('没有 errorSerializer 时 error 保持原始类型', async () => {
+    const service = async () => {
+      await asyncAwait(20)
+      throw new Error('Raw error')
+    }
+
+    const [{ error }] = withSetup(() => useRequest(service))
+
+    await asyncAwait(100)
+    expect(error.value).toBeInstanceOf(Error)
+    expect((error.value as Error).message).toBe('Raw error')
+  })
+
+  it('errorSerializer 处理不同类型的错误', async () => {
+    const service = async (errorType: string) => {
+      await asyncAwait(20)
+      if (errorType === 'string')
+      // eslint-disable-next-line no-throw-literal
+        throw 'String error'
+
+      if (errorType === 'object')
+      // eslint-disable-next-line no-throw-literal
+        throw { status: 404, msg: 'Not found' }
+
+      throw new Error('Error object')
+    }
+
+    const [{ run, error }] = withSetup(() =>
+      useRequest(service, {
+        manual: true,
+        errorSerializer: (e: any) => {
+          if (typeof e === 'string')
+            return { code: -1, message: e }
+
+          if (e?.status)
+            return { code: e.status, message: e.msg }
+
+          return { code: -1, message: e?.message ?? 'Unknown error' }
+        },
+      }),
+    )
+
+    await run('string')
+    await asyncAwait(50)
+    expect(error.value).toEqual({ code: -1, message: 'String error' })
+
+    await run('object')
+    await asyncAwait(50)
+    expect(error.value).toEqual({ code: 404, message: 'Not found' })
+  })
+})

@@ -10,13 +10,15 @@ export default function usePlugins<
   TSerialized = TData,
   // 格式化数据
   TFormatData = TSerialized,
->(plugins: RequestPluginImplement<TData, TParams, TSerialized, TFormatData>[]) {
-  type RequiredFetchPluginHoos = Required<RequestPluginHooks<TData, TParams, TSerialized, TFormatData>>
+  // 错误
+  TError = any,
+>(plugins: RequestPluginImplement<TData, TParams, TSerialized, TFormatData, TError>[]) {
+  type RequiredFetchPluginHoos = Required<RequestPluginHooks<TData, TParams, TSerialized, TFormatData, TError>>
 
-  const pluginHooks = ref<RequestPluginHooks<TData, TParams, TSerialized, TFormatData>[]>([])
+  const pluginHooks = ref<RequestPluginHooks<TData, TParams, TSerialized, TFormatData, TError>[]>([])
 
-  const register = (context: RequestContext<TData, TParams, TSerialized, TFormatData>) => {
-    pluginHooks.value = plugins.map(plugin => plugin(context)).filter(Boolean) as RequestPluginHooks<TData, TParams, TSerialized, TFormatData>[]
+  const register = (context: RequestContext<TData, TParams, TSerialized, TFormatData, TError>) => {
+    pluginHooks.value = plugins.map(plugin => plugin(context)).filter(Boolean) as RequestPluginHooks<TData, TParams, TSerialized, TFormatData, TError>[]
   }
 
   const runPluginHooks = <K extends keyof RequiredFetchPluginHoos>(

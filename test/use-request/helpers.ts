@@ -16,3 +16,8 @@ export interface ListResult<T> {
   page: number
   pageSize: number
 }
+
+export interface ApiError {
+  code: number
+  message: string
+}

@@ -1,4 +1,10 @@
-import type { RequestContext, RequestOptions, RequestPluginImplement, RequestResult, RequestServiceFn } from './types.ts'
+import type {
+  RequestContext,
+  RequestOptions,
+  RequestPluginImplement,
+  RequestResult,
+  RequestServiceFn,
+} from './types.ts'
 import { isBoolean } from 'es-toolkit'
 import { effectScope, onScopeDispose, watch, watchEffect } from 'vue'
 import useCoreRequest from './core/core-request.ts'
@@ -15,13 +21,13 @@ export function useRequest<
   TParams extends any[] = any[],
   TSerialized = TData,
   TFormatData = TSerialized,
+  TError = any,
 >(
   service: RequestServiceFn<TData, TParams>,
-  options: RequestOptions<TData, TParams, TSerialized, TFormatData> = {},
-  plugins: RequestPluginImplement<TData, TParams, TSerialized, TFormatData>[] = [],
-): RequestResult<TData, TParams, TSerialized, TFormatData> {
+  options: RequestOptions<TData, TParams, TSerialized, TFormatData, TError> = {},
+  plugins: RequestPluginImplement<TData, TParams, TSerialized, TFormatData, TError>[] = [],
+): RequestResult<TData, TParams, TSerialized, TFormatData, TError> {
   const scope = effectScope()
-
   const allPlugins = [
     ...plugins,
     useCachePlugin,
@@ -29,13 +35,13 @@ export function useRequest<
     useRefreshOnWindowFocusPlugin,
     usePollingPlugin,
     useErrorRetryPlugin,
-  ] as RequestPluginImplement<TData, TParams, TSerialized, TFormatData>[]
+  ] as RequestPluginImplement<TData, TParams, TSerialized, TFormatData, TError>[]
 
-  const { register, runPluginHooks } = usePlugins<TData, TParams, TSerialized, TFormatData>(allPlugins)
-  const coreState = useCoreState<TData, TParams, TSerialized, TFormatData>(options)
-  const coreRequest = useCoreRequest<TData, TParams, TSerialized, TFormatData>(coreState, service, options, runPluginHooks)
+  const { register, runPluginHooks } = usePlugins<TData, TParams, TSerialized, TFormatData, TError>(allPlugins)
+  const coreState = useCoreState<TData, TParams, TSerialized, TFormatData, TError>(options)
+  const coreRequest = useCoreRequest<TData, TParams, TSerialized, TFormatData, TError>(coreState, service, options, runPluginHooks)
 
-  const context: RequestContext<TData, TParams, TSerialized, TFormatData> = {
+  const context: RequestContext<TData, TParams, TSerialized, TFormatData, TError> = {
     ...coreState,
     ...coreRequest,
     scope,

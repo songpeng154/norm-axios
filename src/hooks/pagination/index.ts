@@ -8,10 +8,11 @@ export function usePagination<
   TParams extends Record<string, any> = Record<string, any>,
   TItem = any,
   TFormatData = TItem,
+  TError = any,
 >(
   service: RequestServiceFn<TData, [TParams]>,
-  options: PaginationOptions<TData, TParams, TItem, TFormatData>,
-): PaginationResult<TData, TParams, TItem, TFormatData> {
+  options: PaginationOptions<TData, TParams, TItem, TFormatData, TError>,
+): PaginationResult<TData, TParams, TItem, TFormatData, TError> {
   const {
     dataSerializer,
     formatList,
@@ -77,7 +78,7 @@ export function usePagination<
     : undefined
 
   // ─── 调用 useRequest ──────────────────────────────────────
-  const fetchInstance = useRequest<TData, [TParams], PaginationData<TItem>, PaginationData<TFormatData>>(
+  const fetchInstance = useRequest<TData, [TParams], PaginationData<TItem>, PaginationData<TFormatData>, TError>(
     wrappedService,
     {
       ...restOptions,

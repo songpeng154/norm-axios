@@ -8,7 +8,9 @@ function definePlugin<
   TSerialized = TData,
   // 格式化数据
   TFormatData = TSerialized,
->(options: RequestPluginImplement<TData, TParams, TSerialized, TFormatData>) {
+  // 错误
+  TError = any,
+>(options: RequestPluginImplement<TData, TParams, TSerialized, TFormatData, TError>) {
   return options
 }
 

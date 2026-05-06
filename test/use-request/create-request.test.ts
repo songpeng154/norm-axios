@@ -1,3 +1,4 @@
+import type { ApiError, ApiResponse } from './helpers.ts'
 import { describe, expect, it } from 'vitest'
 import { createRequest } from '../../src/core/request'
 import { asyncAwait, withSetup } from '../utils.ts'
@@ -408,7 +409,6 @@ describe('createRequest', () => {
 
       const [{ data: userData }] = withSetup(() => useApi(getUser))
       const [{ data: orderData }] = withSetup(() => useApi(getOrder))
-
       await asyncAwait(100)
       expect(userData.value).toEqual({ id: 1, name: 'Alice', email: 'alice@example.com' })
       expect(orderData.value).toEqual({ orderId: 'ORD001', amount: 99.9 })
@@ -624,6 +624,142 @@ describe('createRequest', () => {
 
       await asyncAwait(100)
       expect(data.value).toEqual([4, 5])
+    })
+  })
+
+  describe('createRequest errorSerializer', () => {
+    it('全局配置 errorSerializer 作用于所有请求', async () => {
+      const useApi = createRequest({
+        dataKey: 'data',
+        errorSerializer: (e: any) => ({
+          code: e?.response?.status ?? -1,
+          message: e?.message ?? String(e),
+        }),
+      })
+
+      const service1 = async (): Promise<ApiResponse<string>> => {
+        await asyncAwait(20)
+        throw new Error('Service 1 error')
+      }
+
+      const service2 = async (): Promise<ApiResponse<number>> => {
+        await asyncAwait(20)
+        // eslint-disable-next-line no-throw-literal
+        throw { response: { status: 404 }, message: 'Not found' }
+      }
+
+      const [{ error: error1 }] = withSetup(() => useApi(service1))
+      const [{ error: error2 }] = withSetup(() => useApi(service2))
+
+      await asyncAwait(100)
+      expect(error1.value).toEqual({ code: -1, message: 'Service 1 error' })
+      expect(error2.value).toEqual({ code: 404, message: 'Not found' })
+    })
+
+    it('局部 errorSerializer 覆盖全局配置', async () => {
+      const useApi = createRequest({
+        dataKey: 'data',
+        errorSerializer: (e: any) => ({
+          code: -1,
+          message: 'Global error',
+        }),
+      })
+
+      const service = async (): Promise<ApiResponse<string>> => {
+        await asyncAwait(20)
+        throw new Error('Test error')
+      }
+
+      const [{ error }] = withSetup(() =>
+        useApi(service, {
+          errorSerializer: (e: any) => ({
+            code: 999,
+            message: 'Local override',
+          }),
+        }),
+      )
+
+      await asyncAwait(100)
+      expect(error.value).toEqual({ code: 999, message: 'Local override' })
+    })
+
+    it('全局 errorSerializer 配合 onError 使用', async () => {
+      const useApi = createRequest({
+        dataKey: 'data',
+        errorSerializer: (e: any) => ({
+          code: e?.status ?? 500,
+          message: e?.message ?? 'Unknown error',
+        }),
+      })
+
+      const service = async (): Promise<ApiResponse<string>> => {
+        await asyncAwait(20)
+        throw { status: 403, message: 'Forbidden' }
+      }
+
+      let capturedError: ApiError | null = null
+      const [{ error }] = withSetup(() =>
+        useApi(service, {
+          onError: (err) => {
+            capturedError = err
+          },
+        }),
+      )
+
+      await asyncAwait(100)
+      expect(capturedError).toEqual({ code: 403, message: 'Forbidden' })
+      expect(error.value).toEqual({ code: 403, message: 'Forbidden' })
+    })
+
+    it('errorSerializer 接收请求参数', async () => {
+      const useApi = createRequest({
+        dataKey: 'data',
+        errorSerializer: (e: any, params) => ({
+          code: -1,
+          message: `Error with params: ${JSON.stringify(params)}`,
+        }),
+      })
+
+      const service = async (id: number): Promise<ApiResponse<string>> => {
+        await asyncAwait(20)
+        throw new Error('Failed')
+      }
+
+      const [{ run }] = withSetup(() => useApi(service, { manual: true }))
+
+      await run(42)
+      await asyncAwait(50)
+      // params 应该是 [42]
+    })
+
+    it('多个不同的 createRequest 实例使用不同的 errorSerializer', async () => {
+      const useApi1 = createRequest({
+        dataKey: 'data',
+        errorSerializer: (e: any) => ({
+          code: 1,
+          message: `API 1: ${e?.message ?? ''}`,
+        }),
+      })
+
+      const useApi2 = createRequest({
+        dataKey: 'data',
+        errorSerializer: (e: any) => ({
+          code: 2,
+          message: `API 2: ${e?.message ?? ''}`,
+        }),
+      })
+
+      const service = async (): Promise<ApiResponse<string>> => {
+        await asyncAwait(20)
+        throw new Error('Test')
+      }
+
+      const [{ error: error1 }] = withSetup(() => useApi1(service))
+      const [{ error: error2 }] = withSetup(() => useApi2(service))
+
+      await asyncAwait(100)
+      expect(error1.value).toEqual({ code: 1, message: 'API 1: Test' })
+      expect(error2.value).toEqual({ code: 2, message: 'API 2: Test' })
     })
   })
 })

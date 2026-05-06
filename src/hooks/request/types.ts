@@ -22,6 +22,8 @@ export interface RequestOptions<
   TSerialized = TData,
   // 格式化数据
   TFormatData = TSerialized,
+  // 错误
+  TError = any,
 > {
   /**
    * data 初始的数据
@@ -189,6 +191,17 @@ export interface RequestOptions<
   dataSerializer?: (data: TData, params: TParams) => TSerialized
 
   /**
+   * 将捕获到的原始错误转换为自定义错误类型
+   *
+   * @example
+   * errorSerializer: (e, params) => ({
+   *   code: e?.response?.status ?? -1,
+   *   message: e?.message ?? String(e),
+   * })
+   */
+  errorSerializer?: (error: unknown, params: TParams) => TError
+
+  /**
    * 格式化数据
    * service resolve 后（经过 dataSerializer 提取后），对数据做二次处理
    * data 类型：有 dataSerializer 时为 TSerialized，否则为 TData
@@ -220,7 +233,7 @@ export interface RequestOptions<
    * @param params 请求参数
    */
   onError?: (
-    error: any,
+    error: TError,
     params: TParams,
   ) => void
 
@@ -253,6 +266,8 @@ export interface RequestState<
   TSerialized = TData,
   // 格式化数据
   TFormatData = TSerialized,
+  // 错误
+  TError = any,
 > {
   /**
    * service resolve 的数据,会经过 formatData 处理
@@ -267,7 +282,7 @@ export interface RequestState<
   /**
    * service reject/throw 的错误
    */
-  error: Undefinable<any>
+  error: Undefinable<TError>
 
   /**
    * service 是否正在执行
@@ -340,7 +355,8 @@ export type RequestResult<
   TParams extends any[] = any[],
   TSerialized = TData,
   TFormatData = TSerialized,
-> = WrapWithComputed<RequestState<TData, TParams, TSerialized, TFormatData>>
+  TError = any,
+> = WrapWithComputed<RequestState<TData, TParams, TSerialized, TFormatData, TError>>
   & RequestMethod<TData, TParams, TSerialized, TFormatData>
 
 export interface RequestPluginHooks<
@@ -348,6 +364,7 @@ export interface RequestPluginHooks<
   TParams extends any[] = any[],
   TSerialized = TData,
   TFormatData = TSerialized,
+  TError = any,
 > {
   /**
    * 请求之前触发
@@ -367,7 +384,7 @@ export interface RequestPluginHooks<
    * 请求失败时触发
    */
   onError?: (
-    error: any,
+    error: TError,
     params: TParams,
   ) => void
 
@@ -406,19 +423,20 @@ export interface RequestContext<
   TParams extends any[] = any[],
   TSerialized = TData,
   TFormatData = TSerialized,
-> extends RequestResult<TData, TParams, TSerialized, TFormatData> {
+  TError = any,
+> extends RequestResult<TData, TParams, TSerialized, TFormatData, TError> {
   // 当前作用域
   scope: EffectScope
 
   // 配置项
-  options: RequestOptions<TData, TParams, TSerialized, TFormatData>
+  options: RequestOptions<TData, TParams, TSerialized, TFormatData, TError>
 
   // 原始 state
-  rawState: RequestState<TData, TParams, TSerialized, TFormatData>
+  rawState: RequestState<TData, TParams, TSerialized, TFormatData, TError>
 
   // 设置状态
   setState: (
-    state: Partial<RequestState<TData, TParams, TSerialized, TFormatData>>,
+    state: Partial<RequestState<TData, TParams, TSerialized, TFormatData, TError>>,
   ) => void
 }
 
@@ -427,8 +445,9 @@ export interface RequestPluginImplement<
   TParams extends any[] = any[],
   TSerialized = TData,
   TFormatData = TSerialized,
+  TError = any,
 > {
   (
-    context: RequestContext<TData, TParams, TSerialized, TFormatData>,
-  ): RequestPluginHooks<TData, TParams, TSerialized, TFormatData> | void
+    context: RequestContext<TData, TParams, TSerialized, TFormatData, TError>,
+  ): RequestPluginHooks<TData, TParams, TSerialized, TFormatData, TError> | void
 }

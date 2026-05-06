@@ -21,6 +21,7 @@ import { useRequest } from '../../hooks'
  * 局部 options > config.options > 全局配置
  *
  * @template TDataKey - dataKey 的字面量类型，用于自动推导 data 类型
+ * @template TError - 错误类型，从 errorSerializer 的返回类型推断
  *
  * @param config - 工厂配置
  * @param config.dataKey - 数据字段路径，支持点号嵌套
@@ -33,9 +34,9 @@ import { useRequest } from '../../hooks'
  *   ```typescript
  *   (
  *     service: RequestServiceFn<TData, TParams>,
- *     options?: RequestOptions<TData, TParams, TSerialized, TFormatData>,
- *     plugins?: RequestPluginImplement<TData, TParams, TSerialized, TFormatData>[],
- *   ) => RequestResult<TData, TParams, TSerialized, TFormatData>
+ *     options?: RequestOptions<TData, TParams, TSerialized, TFormatData, TError>,
+ *     plugins?: RequestPluginImplement<TData, TParams, TSerialized, TFormatData, TError>[],
+ *   ) => RequestResult<TData, TParams, TSerialized, TFormatData, TError>
  *   ```
  *
  * @example
@@ -70,8 +71,24 @@ import { useRequest } from '../../hooks'
  * const useApi = createRequest()
  * const { data } = useApi(service)
  * // data.value → ApiResponse（完整的响应对象）
+ *
+ * @example
+ * // 配置错误类型
+ * interface ApiError {
+ *   code: number
+ *   message: string
+ * }
+ * const useApi = createRequest<'data', ApiError>({
+ *   dataKey: 'data',
+ *   errorSerializer: (e) => ({
+ *     code: e?.response?.status ?? -1,
+ *     message: e?.message ?? String(e),
+ *   })
+ * })
+ * const { error } = useApi(service)
+ * // error.value → ApiError | undefined
  */
-export function createRequest<TDataKey extends string = never>(config: CreateRequestConfig<TDataKey> = {}) {
+export function createRequest<TDataKey extends string = never, TError = any>(config: CreateRequestConfig<TDataKey, TError> = {}) {
   return <
     TData extends object,
     TParams extends any[] = any[],
@@ -79,17 +96,20 @@ export function createRequest<TDataKey extends string = never>(config: CreateReq
     TFormatData = TSerialized,
   >(
     service: RequestServiceFn<TData, TParams>,
-    options?: RequestOptions<TData, TParams, TSerialized, TFormatData>,
-    plugins: RequestPluginImplement<TData, TParams, TSerialized, TFormatData>[] = [],
-  ): RequestResult<TData, TParams, TSerialized, TFormatData> => {
+    options?: RequestOptions<TData, TParams, TSerialized, TFormatData, TError>,
+    plugins: RequestPluginImplement<TData, TParams, TSerialized, TFormatData, TError>[] = [],
+  ): RequestResult<TData, TParams, TSerialized, TFormatData, TError> => {
     const _options = {
       ...config.options,
       ...options,
-    } as RequestOptions<TData, TParams, TSerialized, TFormatData>
+    } as RequestOptions<TData, TParams, TSerialized, TFormatData, TError>
 
-    if (config.dataKey)
+    if (config.dataKey && !_options.dataSerializer)
       _options.dataSerializer = (data: any) => get(data, config.dataKey as string)
 
-    return useRequest<TData, TParams, TSerialized, TFormatData>(service, _options, plugins)
+    if (config.errorSerializer && !_options.errorSerializer)
+      _options.errorSerializer = config.errorSerializer
+
+    return useRequest<TData, TParams, TSerialized, TFormatData, TError>(service, _options, plugins)
   }
 }

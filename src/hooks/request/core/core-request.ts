@@ -11,11 +11,12 @@ export default function useCoreRequest<
   TParams extends any[] = any[],
   TSerialized = TData,
   TFormatData = TSerialized,
+  TError = any,
 >(
-  state: ReturnType<typeof useCoreState<TData, TParams, TSerialized, TFormatData>>,
+  state: ReturnType<typeof useCoreState<TData, TParams, TSerialized, TFormatData, TError>>,
   service: RequestServiceFn<TData, TParams>,
-  options: RequestOptions<TData, TParams, TSerialized, TFormatData> = {},
-  runPluginHooks: ReturnType<typeof usePlugins<TData, TParams, TSerialized, TFormatData>>['runPluginHooks'],
+  options: RequestOptions<TData, TParams, TSerialized, TFormatData, TError> = {},
+  runPluginHooks: ReturnType<typeof usePlugins<TData, TParams, TSerialized, TFormatData, TError>>['runPluginHooks'],
 ) {
   const { data, setState, rawState } = state
   const {
@@ -34,6 +35,7 @@ export default function useCoreRequest<
     onFinallyFetchDone,
     throwOnError = false,
     dataSerializer,
+    errorSerializer,
     formatData,
   } = options
 
@@ -80,9 +82,11 @@ export default function useCoreRequest<
       if (currentCount <= cancelledCount)
         return data.value
 
-      setState({ error: e, finished: true })
-      onError?.(e, args)
-      runPluginHooks('onError', e, args)
+      const _e = errorSerializer ? errorSerializer(e, args) : e as TError
+
+      setState({ error: _e, finished: true })
+      onError?.(_e, args)
+      runPluginHooks('onError', _e, args)
 
       if (throwOnError)
         return Promise.reject(e)

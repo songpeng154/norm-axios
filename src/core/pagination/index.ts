@@ -24,6 +24,20 @@ import { usePagination } from '../../hooks'
  *   totalKey: 'data.total',
  * })
  *
+ * // 配置错误类型
+ * interface ApiError {
+ *   code: number
+ *   message: string
+ * }
+ * export const usePage = createPagination<'data.list', 'data.total', ApiError>({
+ *   listKey: 'data.list',
+ *   totalKey: 'data.total',
+ *   errorSerializer: (e) => ({
+ *     code: e?.response?.status ?? -1,
+ *     message: e?.message ?? String(e),
+ *   })
+ * })
+ *
  * // 组件里 — 自动推导，无需泛型
  * const { list } = usePage(getUserList)   // list.value → User[]   ✅
  * const { list } = usePage(getPostList)   // list.value → Post[]   ✅
@@ -31,7 +45,8 @@ import { usePagination } from '../../hooks'
 export function createPagination<
   TListKey extends string,
   TTotalKey extends string,
->(config: CreatePaginationConfig<TListKey, TTotalKey>) {
+  TError = any,
+>(config: CreatePaginationConfig<TListKey, TTotalKey, TError>) {
   const listKey = config.listKey as string
   const totalKey = config.totalKey as string
 
@@ -42,8 +57,8 @@ export function createPagination<
     TFormatData = TItem,
   >(
     service: RequestServiceFn<TData, [TParams]>,
-    options?: Omit<PaginationOptions<TData, TParams, TItem, TFormatData>, 'dataSerializer'>,
-  ): PaginationResult<TData, TParams, TItem, TFormatData> {
+    options?: Omit<PaginationOptions<TData, TParams, TItem, TFormatData, TError>, 'dataSerializer' | 'errorSerializer'>,
+  ): PaginationResult<TData, TParams, TItem, TFormatData, TError> {
     const _options = {
       ...config.options,
       ...options,
@@ -52,8 +67,11 @@ export function createPagination<
         total: get(data, totalKey) ?? 0,
       }),
       paginationSerializer: config.paginationSerializer,
-    } as PaginationOptions<TData, TParams, TItem, TFormatData>
+    } as PaginationOptions<TData, TParams, TItem, TFormatData, TError>
 
-    return usePagination<TData, TParams, TItem, TFormatData>(service, _options)
+    if (config.errorSerializer && !_options.errorSerializer)
+      _options.errorSerializer = config.errorSerializer as any
+
+    return usePagination<TData, TParams, TItem, TFormatData, TError>(service, _options)
   }
 }

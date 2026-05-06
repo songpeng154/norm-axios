@@ -10,8 +10,9 @@ export default function useCoreState<
   TSerialized = TData,
   // 格式化数据
   TFormatData = TSerialized,
->(options: RequestOptions<TData, TParams, TSerialized, TFormatData>) {
-  type State = RequestState<TData, TParams, TSerialized, TFormatData>
+  TError = any,
+>(options: RequestOptions<TData, TParams, TSerialized, TFormatData, TError>) {
+  type State = RequestState<TData, TParams, TSerialized, TFormatData, TError>
 
   const state: State = {
     data: options.initialData,
