@@ -3,6 +3,8 @@
 </p>
 <h1 align="center">
 <b>Vue Rex</b>
+<br>
+<b>让请求更简单</b>
 </h1>
 <p align="center">
   <a href="https://www.npmjs.org/package/vue-rex">
@@ -86,9 +88,7 @@ const { list, total, page, pageSize, run } = usePage(getUserPage)
 
 ## 文档
 
-[文档地址 (Cloudflare)](https://vue-rex-press.pages.dev/document/use-request/basic-usage)
-
-[文档地址 (GitHub)](https://songpeng154.github.io/vue-rex-press/)
+[文档地址 (GitHub)](https://songpeng154.github.io/vue-rex/)
 
 ## 致谢
 
