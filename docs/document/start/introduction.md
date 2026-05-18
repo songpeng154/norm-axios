@@ -10,14 +10,14 @@ outline: deep
 
 - 🏭 **工厂函数模式**：`createRequest` / `createPagination` 创建可复用实例，一次配置全局共享
 - 🛡️ **类型自动推导**：根据 service 返回类型和工厂配置自动推导 `data` 类型
-- 🌐 **多后端适配**：`dataKey` / `listKey` + `totalKey` 统一不同后端响应结构
+- 🌐 **多后端适配**： 优雅的处理不同后端响应结构
 - ⚡ **防抖 / 节流**：内置 `debounceRun` / `throttleRun`，无需额外依赖
 - 💾 **缓存 & SWR**：内存缓存 + Stale-While-Revalidate，列表切换秒开
 - 🔄 **错误重试**：可配置重试次数和间隔，网络抖动自动恢复
 - 🔁 **轮询**：自动定时重新请求，适合实时数据场景
 - 📄 **分页管理**：`page` / `pageSize` 修改即自动请求，无需 watch
 - 🔌 **插件化**：`definePlugin` 自定义扩展，请求生命周期全链路可介入
-- ⚙️ **全局默认值**：工厂函数 options 即全局配置，零重复代码
+- ⚙️ **全局默认值**：工厂函数 options 即全局配置
 
 ## 解决的问题
 
@@ -42,9 +42,9 @@ export const getUser = () => server.get<Response<User>>('/api/user/1')
 
 ```vue
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getUser } from '@/api/user'
 import type { User } from '@/api/user'
+import { onMounted, ref } from 'vue'
+import { getUser } from '@/api/user'
 
 const loading = ref(false)
 const data = ref<User | null>(null)
@@ -54,11 +54,10 @@ const fetchUser = async () => {
   const res = await getUser().finally(() => {
     loading.value = false
   })
-  if (res.code !== 0) {
+  if (res.code !== 0)
     console.error(res.msg)
-  } else {
+  else
     data.value = res.data
-  }
 }
 onMounted(() => fetchUser())
 </script>
@@ -91,7 +90,7 @@ const { data, loading } = useApi(getUser)
 >     if (res.data.code !== 0) return Promise.reject(res.data.msg)
 >     return res.data
 >   },
->   (err) => Promise.reject(err),
+>   err => Promise.reject(err),
 > )
 > ```
 >
@@ -105,21 +104,21 @@ const { data, loading } = useApi(getUser)
 
 ```ts
 // api/user.ts —— API 层
-interface Response<T> { code: number; data: T; msg: string }
+interface Response<T> { code: number, data: T, msg: string }
 
-export interface User { id: number; name: string; email: string }
+export interface User { id: number, name: string, email: string }
 
 // 普通请求：后端返回 Response<User>
 export const getUser = (id: number) => server.get<Response<User>>(`/api/user/${id}`)
 
 // 分页请求：后端返回 Response<{ list: User[]; total: number }>
-export const getUserPage = (params: { page: number; pageSize: number }) =>
-  server.get<Response<{ list: User[]; total: number }>>('/api/users', { params })
+export const getUserPage = (params: { page: number, pageSize: number }) =>
+  server.get<Response<{ list: User[], total: number }>>('/api/users', { params })
 ```
 
 ```ts
 // hooks/api.ts —— Hooks 层
-import { createRequest, createPagination } from 'vue-rex'
+import { createPagination, createRequest } from 'vue-rex'
 
 // createRequest 用于普通请求
 export const useApi = createRequest({
@@ -137,8 +136,8 @@ export const usePage = createPagination({
 ```vue
 <!-- 普通请求：获取用户详情 -->
 <script setup lang="ts">
-import { useApi } from '@/hooks/api'
 import { getUser } from '@/api/user'
+import { useApi } from '@/hooks/api'
 
 const { data, loading } = useApi(() => getUser(1))
 </script>
@@ -147,8 +146,8 @@ const { data, loading } = useApi(() => getUser(1))
 ```vue
 <!-- 分页请求：获取用户列表 -->
 <script setup lang="ts">
-import { usePage } from '@/hooks/api'
 import { getUserPage } from '@/api/user'
+import { usePage } from '@/hooks/api'
 
 const { list, total, page, pageSize } = usePage(getUserPage)
 </script>

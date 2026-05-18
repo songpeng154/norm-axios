@@ -10,7 +10,7 @@ outline: deep
 
 - 🏭 **Factory pattern**: `createRequest` / `createPagination` — configure once, share globally
 - 🛡️ **Type inference**: `data` type auto-inferred from service return type and factory config
-- 🌐 **Backend adaptation**: `dataKey` / `listKey` + `totalKey` unify different response structures
+- 🌐 **Backend adaptation**: gracefully handling different backend response structures
 - ⚡ **Debounce / throttle**: built-in `debounceRun` / `throttleRun`, no extra dependencies
 - 💾 **Cache & SWR**: memory cache + Stale-While-Revalidate for instant list restores
 - 🔄 **Error retry**: configurable retry count and interval for network resilience
@@ -42,9 +42,9 @@ export const getUser = () => server.get<Response<User>>('/api/user/1')
 
 ```vue
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getUser } from '@/api/user'
 import type { User } from '@/api/user'
+import { onMounted, ref } from 'vue'
+import { getUser } from '@/api/user'
 
 const loading = ref(false)
 const data = ref<User | null>(null)
@@ -54,11 +54,10 @@ const fetchUser = async () => {
   const res = await getUser().finally(() => {
     loading.value = false
   })
-  if (res.code !== 0) {
+  if (res.code !== 0)
     console.error(res.msg)
-  } else {
+  else
     data.value = res.data
-  }
 }
 onMounted(() => fetchUser())
 </script>
@@ -91,7 +90,7 @@ const { data, loading } = useApi(getUser)
 >     if (res.data.code !== 0) return Promise.reject(res.data.msg)
 >     return res.data
 >   },
->   (err) => Promise.reject(err),
+>   err => Promise.reject(err),
 > )
 > ```
 >
@@ -105,21 +104,21 @@ Recommended layering: API layer defines types and endpoints → Hooks layer wrap
 
 ```ts
 // api/user.ts — API layer
-interface Response<T> { code: number; data: T; msg: string }
+interface Response<T> { code: number, data: T, msg: string }
 
-export interface User { id: number; name: string; email: string }
+export interface User { id: number, name: string, email: string }
 
 // Basic request: backend returns Response<User>
 export const getUser = (id: number) => server.get<Response<User>>(`/api/user/${id}`)
 
 // Paginated request: backend returns Response<{ list: User[]; total: number }>
-export const getUserPage = (params: { page: number; pageSize: number }) =>
-  server.get<Response<{ list: User[]; total: number }>>('/api/users', { params })
+export const getUserPage = (params: { page: number, pageSize: number }) =>
+  server.get<Response<{ list: User[], total: number }>>('/api/users', { params })
 ```
 
 ```ts
 // hooks/api.ts — Hooks layer
-import { createRequest, createPagination } from 'vue-rex'
+import { createPagination, createRequest } from 'vue-rex'
 
 // createRequest for basic requests
 export const useApi = createRequest({
@@ -137,8 +136,8 @@ export const usePage = createPagination({
 ```vue
 <!-- Basic: fetch user detail -->
 <script setup lang="ts">
-import { useApi } from '@/hooks/api'
 import { getUser } from '@/api/user'
+import { useApi } from '@/hooks/api'
 
 const { data, loading } = useApi(() => getUser(1))
 </script>
@@ -147,8 +146,8 @@ const { data, loading } = useApi(() => getUser(1))
 ```vue
 <!-- Paginated: fetch user list -->
 <script setup lang="ts">
-import { usePage } from '@/hooks/api'
 import { getUserPage } from '@/api/user'
+import { usePage } from '@/hooks/api'
 
 const { list, total, page, pageSize } = usePage(getUserPage)
 </script>

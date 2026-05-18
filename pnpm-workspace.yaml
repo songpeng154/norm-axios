@@ -1,2 +1,5 @@
 packages:
-  - 'docs'
+  - docs
+allowBuilds:
+  esbuild: true
+  simple-git-hooks: true

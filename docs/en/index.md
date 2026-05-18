@@ -6,7 +6,7 @@ hero:
   text: "Requests made simple"
   tagline: Factory function pattern — configure once, reuse everywhere
   image:
-    src: /logo-light.svg
+    src: /logo.png
     alt: Vue Rex
   actions:
     - theme: brand

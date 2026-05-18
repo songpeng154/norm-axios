@@ -6,7 +6,7 @@ export default defineConfig({
   base: '/vue-rex/',
   cleanUrls: true,
   head: [
-    ['link', { rel: 'icon', href: '/vue-rex/favicon.ico' }]
+    ['link', { rel: 'icon', href: '/vue-rex/favicon.ico' }],
   ],
   markdown: {
     theme: {
@@ -43,7 +43,7 @@ export default defineConfig({
       themeConfig: {
         nav: [
           { text: '文档', link: '/document/start/introduction', activeMatch: '^/document/' },
-          { text: 'API参考', link: '/api-reference/common-type/home', activeMatch: '^/api-reference/' },
+          // { text: 'API参考', link: '/api-reference/common-type/home', activeMatch: '^/api-reference/' },
         ],
         sidebar: {
           '/document': [
@@ -81,17 +81,17 @@ export default defineConfig({
               link: '/document/use-pagination/introduction',
             },
           ],
-          '/api-reference': [
-            { text: '通用类型', link: '/api-reference/common-type/home' },
-            {
-              text: 'Hooks',
-              base: '/api-reference/hooks',
-              items: [
-                { text: 'createRequest', link: '/use-request/home' },
-                { text: 'createPagination', link: '/use-pagination/home' },
-              ],
-            },
-          ],
+          // '/api-reference': [
+          //   { text: '通用类型', link: '/api-reference/common-type/home' },
+          //   {
+          //     text: 'Hooks',
+          //     base: '/api-reference/hooks',
+          //     items: [
+          //       { text: 'createRequest', link: '/use-request/home' },
+          //       { text: 'createPagination', link: '/use-pagination/home' },
+          //     ],
+          //   },
+          // ],
         },
       },
     },
