@@ -1,9 +1,18 @@
 {
   "name": "vue-rex",
-  "version": "1.1.18",
   "type": "module",
+  "version": "1.1.19",
   "description": "Vue Rex 是一个面向 Vue 3 的高度灵活、类型安全且插件化的请求 Hook 库，支持多后端适配、缓存、分页、插件化扩展等特性。",
+  "author": {
+    "email": "419626398@qq.com",
+    "name": "songpeng154",
+    "url": "https://github.com/songpeng154"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/songpeng154/vue-rex.git"
+  },
   "keywords": [
     "axios",
     "vue-request",
@@ -13,19 +22,6 @@
     "vue-rex",
     "vue-hooks"
   ],
-  "author": {
-    "email": "419626398@qq.com",
-    "name": "songpeng154",
-    "url": "https://github.com/songpeng154"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/songpeng154/vue-rex.git"
-  },
-  "engines": {
-    "node": ">=18.12.0",
-    "pnpm": ">=8.7.0"
-  },
   "exports": {
     ".": {
       "import": {
@@ -42,9 +38,13 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "files": [
-    "dist",
-    "README.md"
+    "README.md",
+    "dist"
   ],
+  "engines": {
+    "node": ">=18.12.0",
+    "pnpm": ">=8.7.0"
+  },
   "scripts": {
     "build": "tsdown",
     "build:watch": "tsdown --watch",
@@ -59,6 +59,9 @@
     "type-check": "vue-tsc --noEmit",
     "tag": "bumpp",
     "publish:npm": "npm publish --access public"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
   },
   "dependencies": {
     "@vueuse/core": "^12.8.2",
@@ -84,9 +87,6 @@
     "vite": "^6.0.0",
     "vitest": "^4.1.5",
     "vue-tsc": "^2.2.12"
-  },
-  "peerDependencies": {
-    "vue": "^3.3.0"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
